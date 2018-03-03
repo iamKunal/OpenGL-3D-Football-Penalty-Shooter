@@ -75,11 +75,13 @@ void draw() {
     glRotatef(cameraAngle[0], 1.0, 0.0, 0.0);
     glRotatef(cameraAngle[1], 0.0, 1.0, 0.0);
     glRotatef(cameraAngle[2], 0.0, 0.0, 1.0);
+    drawField();
+
 
     glPushMatrix();
-    glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z);
-    glutWireSphere(0.2, 20, 20);
-    glPopAttrib();
+    glColor3f(1.0, 1.0, 0.0);
+    glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z - BALL_RADIUS);
+    glutWireSphere(BALL_RADIUS, 20, 20);
 //    drawBox(0.3);
 
     glPopMatrix();
@@ -120,7 +122,7 @@ void handleKeypress(unsigned char key, //The key that was pressed
     }
 }
 
-void handleSpecialKeypress(int key, int x, int y){
+void handleSpecialKeypress(int key, int x, int y) {
 
     switch (key) {
         case GLUT_KEY_UP:
@@ -139,10 +141,15 @@ void handleSpecialKeypress(int key, int x, int y){
 }
 
 void myInit(void) {
-    glClearColor(137/255.0, 206/255.0, 255/255.0, 0);
+    glClearColor(137 / 255.0, 206 / 255.0, 255 / 255.0, 0);
     gluOrtho2D(0, WIDTH, 0, HEIGHT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+//    glDisable(GL_LIGHTING);
+
 }
 
 int main(int argc, char *argv[]) {

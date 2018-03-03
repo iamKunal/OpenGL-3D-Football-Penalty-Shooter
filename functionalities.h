@@ -8,6 +8,7 @@
 
 #include <bits/stdc++.h>
 #include "constants.h"
+#include "SOIL.h"
 using namespace std;
 
 void handleResize(int w, int h) {
@@ -58,5 +59,29 @@ struct PhysicalState {
         timePassed = 0;
     }
 };
+
+
+int LoadGLTexture(char * filename)
+{
+    GLuint texture = SOIL_load_OGL_texture
+            (
+                    filename,
+                    SOIL_LOAD_AUTO,
+                    SOIL_CREATE_NEW_ID,
+                    SOIL_FLAG_INVERT_Y
+            );
+
+
+    if(texture == 0)
+        return false;
+
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+    return texture;
+}
+
 
 #endif //FOOTBALL_PENALTY_SHOOTER_FUNCTIONALITIES_H

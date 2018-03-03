@@ -11,5 +11,7 @@
 
 #define WINDOW_NAME "Football Penalty Shooter"
 
+#define BALL_RADIUS 0.2
+
 
 #endif //FOOTBALL_PENALTY_SHOOTER_CONSTANTS_H
