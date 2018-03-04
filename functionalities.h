@@ -7,41 +7,22 @@
 
 
 #include <bits/stdc++.h>
+#include <GL/glut.h>
 #include "constants.h"
 #include "SOIL.h"
+
+#define DEG2GRAD(x) ((x) * PI/180.0)
+
+
 using namespace std;
 
-void handleResize(int w, int h) {
-    //Tell OpenGL how to convert from coordinates to pixel values
-    glViewport(0, 0, w, h);
-
-    glMatrixMode(GL_PROJECTION); //Switch to setting the camera perspective
-
-    //Set the camera perspective
-    glLoadIdentity(); //Reset the camera
-    gluPerspective(45.0,                  //The camera angle
-                   (double) w / (double) h, //The width-to-height ratio
-                   1.0,                   //The near z clipping coordinate
-                   200.0);                //The far z clipping coordinate
-}
+void handleResize(int w, int h);
 
 
 
-struct axes {
-    double x, y, z;
-    double &operator[] (int index){
-        switch(index){
-            case 0:
-                return x;
-            case 1:
-                return y;
-            case 2:
-                return z;
-            default:
-                cout<<"Out of Bound Axis!"<<endl;
-                exit(1);
-        }
-    }
+struct axes{
+    double x,y,z;
+    double &operator[] (int);
 };
 
 struct PhysicalState {
@@ -52,36 +33,32 @@ struct PhysicalState {
     axes velocityCurrent;
     axes accelerationCurrent;
 
+    double elasticity;
     double timePassed;
 
-    PhysicalState() {
-        positionInitial = positionCurrent = velocityInitial = velocityCurrent = accelerationCurrent = {0.0, 0.0, 0.0};
-        timePassed = 0;
-    }
+    PhysicalState();
 };
 
 
-int LoadGLTexture(char * filename)
-{
-    GLuint texture = SOIL_load_OGL_texture
-            (
-                    filename,
-                    SOIL_LOAD_AUTO,
-                    SOIL_CREATE_NEW_ID,
-                    SOIL_FLAG_INVERT_Y
-            );
+int LoadGLTexture(char * filename);
 
 
-    if(texture == 0)
-        return false;
+void initialiseEverything();
+
+void cameraPosition(axes point, double distance, double xAngle, double zAngle);
+
+struct camera{
+    double xAngle, yAngle;
+    double distance;
+    camera();
+};
+extern camera sphereCamera;
+
+void drawHUD();
 
 
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+enum mode {ADJUSTING, AIMING, SHOOTING, REPLAY};
 
-    return texture;
-}
-
+extern mode currentMode;
 
 #endif //FOOTBALL_PENALTY_SHOOTER_FUNCTIONALITIES_H

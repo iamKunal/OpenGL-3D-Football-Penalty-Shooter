@@ -36,22 +36,46 @@ void drawBox(float boxSize) {
 }
 
 
+double cameraAngle[3];
+
+double translations[3];
+
 PhysicalState sphere;
 
+
 void getCurrentAcceleration(PhysicalState &p) {
-    double k = 10;
-    for (int i = 0; i < 3; ++i) {
-        p.accelerationCurrent[i] = -k * p.positionCurrent[i];
-    }
+//    double k = 10;
+    p.accelerationCurrent[2] = -9.8;
 }
 
 void updatePos(PhysicalState &p, double t) {
     p.timePassed += t;
     getCurrentAcceleration(p);
-    for (int i = 0; i < 3; ++i) {
-        p.positionCurrent[i] = p.velocityCurrent[i] * t + 0.5 * p.accelerationCurrent[i] * t * t + p.positionCurrent[i];
-        p.velocityCurrent[i] = p.velocityCurrent[i] + p.accelerationCurrent[i] * t;
+
+
+    {   // Gravity and ground bouncing effects
+        for (int i = 0; i < 3; ++i) {
+            p.positionCurrent[i] =
+                    p.velocityCurrent[i] * t + 0.5 * p.accelerationCurrent[i] * t * t + p.positionCurrent[i];
+            p.velocityCurrent[i] = p.velocityCurrent[i] + p.accelerationCurrent[i] * t;
+        }
+        if (p.positionCurrent[2] <= 0) {
+            p.positionCurrent[2] = 0;
+            p.velocityCurrent[2] = -p.velocityCurrent[2];
+            for (int i = 0; i < 3; ++i) {
+                p.velocityCurrent[i] = p.elasticity * p.velocityCurrent[i];
+            }
+        }
+        for (int i = 0; i < 3; ++i) {
+            if (fabs(p.velocityCurrent[i]) <= THRESHOLD_ZERO) {
+                p.velocityCurrent[i] = 0;
+            }
+        }
+        if (fabs(p.positionCurrent[2]) <= THRESHOLD_ZERO) {
+            p.positionCurrent[2] = 0;
+        }
     }
+
 }
 
 void updatePosCallBack(int _) {
@@ -61,30 +85,54 @@ void updatePosCallBack(int _) {
     glutTimerFunc(100 / fps, updatePosCallBack, 0);
 }
 
-double cameraAngle[3];
-
-double translations[3];
-
 void draw() {
+    glLoadIdentity(); //Reset the drawing perspective
+//    glMatrixMode(GL_PROJECTION);
+    cameraPosition(sphere.positionCurrent, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.yAngle);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW); //Switch to the drawing perspective
-    glLoadIdentity(); //Reset the drawing perspective
-    glTranslatef(translations[0], translations[1], translations[2]);
-    glTranslatef(0.0f, 0.0f, -5.0f); //Move forward 5 units
-    glRotatef(90, 1.0, 0, 0);
-    glRotatef(cameraAngle[0], 1.0, 0.0, 0.0);
-    glRotatef(cameraAngle[1], 0.0, 1.0, 0.0);
-    glRotatef(cameraAngle[2], 0.0, 0.0, 1.0);
-    drawField();
+//    glScalef(-1.0f, -1.0f, 1.0f);
+//    glTranslatef(0, 0, 0);
+//    glTranslatef(translations[0], translations[1], translations[2]);
+
+//    glutSolidSphere(BALL_RADIUS, 20, 20);
+
+//    glRotatef(cameraAngle[0], 1.0, 0.0, 0.0);
+//    glRotatef(cameraAngle[1], 0.0, 1.0, 0.0);
+//    glRotatef(cameraAngle[2], 0.0, 0.0, 1.0);
+
+    glColor3f(1, 0, 0);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(5, 0, 0);
+    glColor3f(0, 1, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 5, 0);
+    glColor3f(0, 0, 1);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 5);
+    glEnd();
 
 
+
+
+////    glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z-20.0f);
     glPushMatrix();
     glColor3f(1.0, 1.0, 0.0);
-    glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z - BALL_RADIUS);
+    glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z);
+
+//    glRotatef(90, 0,0,1);
+
     glutWireSphere(BALL_RADIUS, 20, 20);
 //    drawBox(0.3);
 
     glPopMatrix();
+    ground.draw();
+
+//    drawField();
+
+    drawHUD();
+
 
     glutSwapBuffers();
     glutPostRedisplay();
@@ -107,42 +155,78 @@ void rotateAbout(int axes, int direction) {
 
 void handleKeypress(unsigned char key, //The key that was pressed
                     int x, int y) {    //The current mouse coordinates
-    switch (key) {
-        case '+':
-            translations[2] += 0.05f;
-            break;
-        case '-':
-            translations[2] += -0.05f;
-            break;
-        case ' ':
-            updatePosCallBack(0);
-            break;
-        case 27: //Escape key
-            exit(0); //Exit the program
+    if (currentMode == ADJUSTING || currentMode == REPLAY) {
+        switch (key) {
+            case '+':
+                sphereCamera.distance -= 0.1f;
+                break;
+            case '-':
+                sphereCamera.distance += 0.1f;
+                break;
+            case ' ':
+                currentMode = AIMING;
+                glutPostRedisplay();
+                break;
+            case 27: //Escape key
+                exit(0); //Exit the program
+        }
+    }
+    if (currentMode == AIMING) {
+        switch (key) {
+            case '+':
+                sphereCamera.distance -= 0.1f;
+                break;
+            case '-':
+                sphereCamera.distance += 0.1f;
+                break;
+            case ' ':
+                currentMode = AIMING;
+                glutPostRedisplay();
+                break;
+            case 27: //Escape key
+                currentMode = ADJUSTING;
+        }
     }
 }
 
 void handleSpecialKeypress(int key, int x, int y) {
-
-    switch (key) {
-        case GLUT_KEY_UP:
-            rotateAbout(1, 1);
-            break;
-        case GLUT_KEY_DOWN:
-            rotateAbout(1, -1);
-            break;
-        case GLUT_KEY_LEFT:
-            rotateAbout(3, -1);
-            break;
-        case GLUT_KEY_RIGHT:
-            rotateAbout(3, 1);
-            break;
+    if (currentMode == ADJUSTING || currentMode == REPLAY) {
+        switch (key) {
+            case GLUT_KEY_UP:
+                sphereCamera.xAngle += 1.0f;
+                break;
+            case GLUT_KEY_DOWN:
+                sphereCamera.xAngle -= 1.0f;
+                break;
+            case GLUT_KEY_LEFT:
+                sphereCamera.yAngle -= 1.0f;
+                break;
+            case GLUT_KEY_RIGHT:
+                sphereCamera.yAngle += 1.0f;
+                break;
+        }
+    }
+    if (currentMode == AIMING) {
+        switch (key) {
+            case GLUT_KEY_UP:
+                sphereCamera.xAngle += 1.0f;
+                break;
+            case GLUT_KEY_DOWN:
+                sphereCamera.xAngle -= 1.0f;
+                break;
+            case GLUT_KEY_LEFT:
+                sphereCamera.yAngle -= 1.0f;
+                break;
+            case GLUT_KEY_RIGHT:
+                sphereCamera.yAngle += 1.0f;
+                break;
+        }
     }
 }
 
 void myInit(void) {
     glClearColor(137 / 255.0, 206 / 255.0, 255 / 255.0, 0);
-    gluOrtho2D(0, WIDTH, 0, HEIGHT);
+//    glOrtho(0, WIDTH, 0, HEIGHT, 0, 500);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_BLEND);
@@ -153,7 +237,12 @@ void myInit(void) {
 }
 
 int main(int argc, char *argv[]) {
-    sphere.positionInitial.x = sphere.positionCurrent.x = -1.0;
+    initialiseEverything();
+    sphere.positionInitial.x = sphere.positionCurrent.x = 0.0;
+    sphere.velocityCurrent[0] = sphere.velocityInitial[0] = sphere.velocityCurrent[1] = sphere.velocityInitial[1] = sphere.velocityCurrent[2] = sphere.velocityInitial[2] = 3;
+
+    sphere.elasticity = 0.9;
+    translations[2] = -10.0f;
 
 
     glutInit(&argc, argv);
