@@ -13,17 +13,20 @@
 
 #define DEG2GRAD(x) ((x) * PI/180.0)
 
+#define GRAD2DEG(x) ((x) * 180.0/PI)
 
 using namespace std;
 
 void handleResize(int w, int h);
 
 
+struct axes {
+    double x, y, z;
 
-struct axes{
-    double x,y,z;
-    double &operator[] (int);
+    double &operator[](int);
 };
+
+double distanceBW(axes axes1, axes axes2);
 
 struct PhysicalState {
     axes positionInitial;
@@ -40,25 +43,41 @@ struct PhysicalState {
 };
 
 
-int LoadGLTexture(char * filename);
+int LoadGLTexture(char *filename);
 
 
 void initialiseEverything();
 
+void drawGoalPost();
+
 void cameraPosition(axes point, double distance, double xAngle, double zAngle);
 
-struct camera{
+struct camera {
     double xAngle, yAngle;
     double distance;
+
     camera();
 };
+
 extern camera sphereCamera;
+
+void myShear();
 
 void drawHUD();
 
 
-enum mode {ADJUSTING, AIMING, SHOOTING, REPLAY};
+enum mode {
+    ADJUSTING, AIMING, POWERING, SHOOTING, REPLAY, NONE
+};
+
+extern double powerMeter;
+
+void drawPowerMeter();
 
 extern mode currentMode;
+
+extern bool currentlyWaiting;
+
+extern bool downKeys[127];
 
 #endif //FOOTBALL_PENALTY_SHOOTER_FUNCTIONALITIES_H

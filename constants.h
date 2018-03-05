@@ -11,10 +11,24 @@
 
 #define WINDOW_NAME "Football Penalty Shooter"
 
-#define BALL_RADIUS 0.2
+#define BALL_RADIUS 0.3
+#define POLE_RADIUS 0.15 //0.15
+#define BALL_ELASTICITY 0.85
+
+#define POLE_HEIGHT 0.0 //2.5
+#define POLE_LENGTH 5.0
+
+#define GOAL_POST_X 0.0
+#define GOAL_POST_Y 5.0
+
+#define POWER_METER_VELOCITY 0.2
+
+#define BALL_MAX_SPEED 9
+#define BALL_MIN_SPEED 4
+
 
 #define THRESHOLD_ZERO 0.03
-const long double PI = 3.141592653589793238L;
+const double PI = 3.141592653589793238L;
 
 
 #endif //FOOTBALL_PENALTY_SHOOTER_CONSTANTS_H

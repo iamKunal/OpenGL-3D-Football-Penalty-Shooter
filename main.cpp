@@ -10,47 +10,83 @@
 using namespace std;
 
 
-void drawBox(float boxSize) {
-    float drawSize = boxSize / 2;
-    glBegin(GL_QUADS);
-    glVertex3f(-drawSize, -drawSize, drawSize);
-    glVertex3f(drawSize, -drawSize, drawSize);
-    glVertex3f(drawSize, drawSize, drawSize);
-    glVertex3f(-drawSize, drawSize, drawSize);
-    glEnd();
-
-    glBegin(GL_QUADS);
-    glVertex3f(drawSize, -drawSize, drawSize);
-    glVertex3f(drawSize, -drawSize, -drawSize);
-    glVertex3f(drawSize, drawSize, -drawSize);
-    glVertex3f(drawSize, drawSize, drawSize);
-    glEnd();
-
-
-    glBegin(GL_QUADS);
-    glVertex3f(-drawSize, drawSize, -drawSize);
-    glVertex3f(drawSize, drawSize, -drawSize);
-    glVertex3f(drawSize, -drawSize, -drawSize);
-    glVertex3f(-drawSize, -drawSize, -drawSize);
-    glEnd();
-}
-
-
-double cameraAngle[3];
-
 double translations[3];
 
 PhysicalState sphere;
 
 
-void getCurrentAcceleration(PhysicalState &p) {
-//    double k = 10;
-    p.accelerationCurrent[2] = -9.8;
-}
+bool poleColided[3];
 
 void updatePos(PhysicalState &p, double t) {
     p.timePassed += t;
-    getCurrentAcceleration(p);
+
+    {//Collision with Pole0
+        if (p.positionCurrent.z < POLE_HEIGHT && p.positionCurrent.z > 0.0) {
+            axes t = {-POLE_LENGTH / 2, GOAL_POST_Y, p.positionCurrent.z};
+            if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && !poleColided[0]) {
+                poleColided[0] = true;
+                double alpha, beta, theta;
+                beta = atan(p.velocityCurrent.y / p.velocityCurrent.x);
+                axes vec;
+                for (int i = 0; i < 3; ++i) {
+                    vec[i] = t[i] - p.positionCurrent[i];
+                }
+                alpha = atan(vec.y / vec.x);
+                theta = PI / 2.0 - beta + 2 * alpha;
+                double v = p.velocityCurrent.x * p.velocityCurrent.x + p.velocityCurrent.y * p.velocityCurrent.y;
+                v = sqrt(v);
+                p.velocityCurrent.y = -v * cos(theta) * p.elasticity;
+                p.velocityCurrent.x = v * sin(theta) * p.elasticity;
+            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleColided[0]){
+                poleColided[0] = false;
+            }
+        }
+    }
+    {//Collision with Pole2
+        if (p.positionCurrent.z < POLE_HEIGHT && p.positionCurrent.z > 0.0) {
+            axes t = {POLE_LENGTH / 2, GOAL_POST_Y, p.positionCurrent.z};
+            if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && !poleColided[2]) {
+                poleColided[2] = true;
+                double alpha, beta, theta;
+                beta = atan(p.velocityCurrent.y / p.velocityCurrent.x);
+                axes vec;
+                for (int i = 0; i < 3; ++i) {
+                    vec[i] = t[i] - p.positionCurrent[i];
+                }
+                alpha = atan(vec.y / vec.x);
+                theta = PI / 2.0 - beta + 2 * alpha;
+                double v = p.velocityCurrent.x * p.velocityCurrent.x + p.velocityCurrent.y * p.velocityCurrent.y;
+                v = sqrt(v);
+                p.velocityCurrent.y = v * cos(theta) * p.elasticity;
+                p.velocityCurrent.x = -v * sin(theta) * p.elasticity;
+
+            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleColided[2]){
+                poleColided[2] = false;
+            }
+        }
+    }
+    {//Collision with Pole1
+        if (p.positionCurrent.x < POLE_LENGTH/2 + POLE_RADIUS && p.positionCurrent.x>-POLE_LENGTH/2 - POLE_RADIUS) {
+            axes t = {p.positionCurrent.x, GOAL_POST_Y, POLE_RADIUS+POLE_HEIGHT};
+            if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && !poleColided[1]) {
+                poleColided[1] = true;
+                double alpha, beta, theta;
+                beta = atan(p.velocityCurrent.y / p.velocityCurrent.z);
+                axes vec;
+                for (int i = 0; i < 3; ++i) {
+                    vec[i] = t[i] - p.positionCurrent[i];
+                }
+                alpha = atan(vec.y / vec.z);
+                theta = PI / 2.0 - beta + 2 * alpha;
+                double v = p.velocityCurrent.z * p.velocityCurrent.z + p.velocityCurrent.y * p.velocityCurrent.y;
+                v = sqrt(v);
+                p.velocityCurrent.y = -v * cos(theta) * p.elasticity;
+                p.velocityCurrent.z = v * sin(theta) * p.elasticity;
+            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleColided[1]){
+                poleColided[1] = false;
+            }
+        }
+    }
 
 
     {   // Gravity and ground bouncing effects
@@ -75,72 +111,91 @@ void updatePos(PhysicalState &p, double t) {
             p.positionCurrent[2] = 0;
         }
     }
-
+    if (p.positionCurrent.y > 15.0 || p.positionCurrent.y < -10.0) {
+        p.velocityCurrent.y = -p.velocityCurrent.y;
+    }
 }
 
 void updatePosCallBack(int _) {
+    if (currentMode != SHOOTING) {
+        currentMode = SHOOTING;
+        currentlyWaiting = false;
+    }
     float fps = 60;
 
     updatePos(sphere, 1.0 / fps);
     glutTimerFunc(100 / fps, updatePosCallBack, 0);
 }
 
+axes toLookAt;
+
 void draw() {
     glLoadIdentity(); //Reset the drawing perspective
-//    glMatrixMode(GL_PROJECTION);
-    cameraPosition(sphere.positionCurrent, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.yAngle);
+
+    GLfloat lightColor0[] = {1.0f, 1.0f, 1.0f, 1.0f}; //Color (0.5, 0.5, 0.5)
+    GLfloat lightPos0[] = {-1.0f, -1.0f, -1.0f, 1.0f}; //Positioned at (4, 0, 8)
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+    cameraPosition(toLookAt, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.yAngle);
+    GLfloat lightColor1[] = {0.4f, 0.4f, 0.2f, 1.0f}; //Color (0.5, 0.5, 0.5)
+    GLfloat lightPos1[] = {-1.0f, -1.0f, -1.0f, 1.0f}; //Positioned at (4, 0, 8)
+    glLightfv(GL_LIGHT1, GL_AMBIENT, lightColor1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW); //Switch to the drawing perspective
-//    glScalef(-1.0f, -1.0f, 1.0f);
-//    glTranslatef(0, 0, 0);
-//    glTranslatef(translations[0], translations[1], translations[2]);
 
-//    glutSolidSphere(BALL_RADIUS, 20, 20);
+//    glColor3f(1, 0, 0);
+//    glBegin(GL_LINES);
+//    glVertex3f(0, 0, 0);
+//    glVertex3f(5, 0, 0);
+//    glColor3f(0, 1, 0);
+//    glVertex3f(0, 0, 0);
+//    glVertex3f(0, 5, 0);
+//    glColor3f(0, 0, 1);
+//    glVertex3f(0, 0, 0);
+//    glVertex3f(0, 0, 5);
+//    glEnd();
 
-//    glRotatef(cameraAngle[0], 1.0, 0.0, 0.0);
-//    glRotatef(cameraAngle[1], 0.0, 1.0, 0.0);
-//    glRotatef(cameraAngle[2], 0.0, 0.0, 1.0);
-
-    glColor3f(1, 0, 0);
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(5, 0, 0);
-    glColor3f(0, 1, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 5, 0);
-    glColor3f(0, 0, 1);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, 5);
-    glEnd();
-
-
-
-
-////    glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z-20.0f);
     glPushMatrix();
     glColor3f(1.0, 1.0, 0.0);
     glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z);
 
-//    glRotatef(90, 0,0,1);
-
     glutWireSphere(BALL_RADIUS, 20, 20);
-//    drawBox(0.3);
 
     glPopMatrix();
     ground.draw();
 
-//    drawField();
+    glPushMatrix();
+
+    glPushAttrib(GL_CURRENT_BIT);
+    glColor4f(1.0, 1.0, 1.0, 0.7);
+    drawGoalPost();
+
+    glPopAttrib();
+    glPopMatrix();
+    if (currentMode == POWERING || currentMode == AIMING)
+        aimArrow.drawWithAngles();
+
+
+    glDisable(GL_LIGHTING);
 
     drawHUD();
 
-
+    glEnable(GL_LIGHTING);
     glutSwapBuffers();
     glutPostRedisplay();
 }
 
+void incrementPowerMeter(int _) {
+    if (powerMeter >= 1.0) {
+        downKeys[' '] = false;
+    } else if (!currentlyWaiting && currentMode == POWERING) {
+        powerMeter += 0.015;
+        glutTimerFunc(1000 * 1 / 60.0, incrementPowerMeter, 0);
+    }
+}
+
 void update(int _) {
     float increment = 0.0;
-    glutPostRedisplay();
 }
 
 void update_callback(int _) {
@@ -148,13 +203,9 @@ void update_callback(int _) {
     glutTimerFunc(25, update_callback, 0);
 }
 
-void rotateAbout(int axes, int direction) {
-    cameraAngle[axes - 1] += direction * 1;
-}
-
-
 void handleKeypress(unsigned char key, //The key that was pressed
                     int x, int y) {    //The current mouse coordinates
+    downKeys[key] = true;
     if (currentMode == ADJUSTING || currentMode == REPLAY) {
         switch (key) {
             case '+':
@@ -163,9 +214,8 @@ void handleKeypress(unsigned char key, //The key that was pressed
             case '-':
                 sphereCamera.distance += 0.1f;
                 break;
-            case ' ':
+            case '\r':
                 currentMode = AIMING;
-                glutPostRedisplay();
                 break;
             case 27: //Escape key
                 exit(0); //Exit the program
@@ -180,13 +230,45 @@ void handleKeypress(unsigned char key, //The key that was pressed
                 sphereCamera.distance += 0.1f;
                 break;
             case ' ':
-                currentMode = AIMING;
-                glutPostRedisplay();
+                currentMode = POWERING;
+                glutTimerFunc(1000 * 1 / 60.0, incrementPowerMeter, 0);
                 break;
             case 27: //Escape key
                 currentMode = ADJUSTING;
         }
     }
+}
+
+void idle() {
+    if (!currentlyWaiting) {
+        if (currentMode == POWERING && !downKeys[' ']) {
+            sphere.velocityCurrent[0] = sphere.velocityInitial[0] =
+                    cos(DEG2GRAD(aimArrow.zAngle)) * sin(DEG2GRAD(aimArrow.yAngle)) * BALL_MAX_SPEED * powerMeter;
+            sphere.velocityCurrent[1] = sphere.velocityInitial[1] =
+                    cos(DEG2GRAD(aimArrow.zAngle)) * cos(DEG2GRAD(aimArrow.yAngle)) * BALL_MAX_SPEED * powerMeter;
+            sphere.velocityCurrent[2] = sphere.velocityInitial[2] =
+                    sin(DEG2GRAD(aimArrow.zAngle)) * BALL_MAX_SPEED * powerMeter + BALL_MIN_SPEED;
+            if (powerMeter >= 1.0)
+                powerMeter = 1.0;
+            glutTimerFunc(1000, updatePosCallBack, 0);
+            currentlyWaiting = true;
+        }
+        if (currentMode == POWERING && downKeys[27]) {
+            currentMode = AIMING;
+            powerMeter = 0.0;
+        }
+        if (currentMode == REPLAY || currentMode == SHOOTING) {
+            if (sphere.positionCurrent.y <= GOAL_POST_Y)
+                toLookAt = sphere.positionCurrent;
+        }
+        if (currentMode == POWERING) {
+        }
+    }
+    glutPostRedisplay();
+}
+
+void handleUpKeypress(unsigned char key, int x, int y) {
+    downKeys[key] = false;
 }
 
 void handleSpecialKeypress(int key, int x, int y) {
@@ -209,16 +291,16 @@ void handleSpecialKeypress(int key, int x, int y) {
     if (currentMode == AIMING) {
         switch (key) {
             case GLUT_KEY_UP:
-                sphereCamera.xAngle += 1.0f;
+                aimArrow.zAngle += 1.0f;
                 break;
             case GLUT_KEY_DOWN:
-                sphereCamera.xAngle -= 1.0f;
+                aimArrow.zAngle -= 1.0f;
                 break;
             case GLUT_KEY_LEFT:
-                sphereCamera.yAngle -= 1.0f;
+                aimArrow.yAngle -= 1.0f;
                 break;
             case GLUT_KEY_RIGHT:
-                sphereCamera.yAngle += 1.0f;
+                aimArrow.yAngle += 1.0f;
                 break;
         }
     }
@@ -232,16 +314,24 @@ void myInit(void) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_2D);
-//    glDisable(GL_LIGHTING);
 
+    glEnable(GL_LIGHTING); //Enable lighting
+    glEnable(GL_LIGHT0); //Enable light #0
+    glEnable(GL_LIGHT1); //Enable light #1
+    glEnable(GL_NORMALIZE); //Automatically normalize normals
+    glShadeModel(GL_SMOOTH);
 }
 
 int main(int argc, char *argv[]) {
     initialiseEverything();
     sphere.positionInitial.x = sphere.positionCurrent.x = 0.0;
-    sphere.velocityCurrent[0] = sphere.velocityInitial[0] = sphere.velocityCurrent[1] = sphere.velocityInitial[1] = sphere.velocityCurrent[2] = sphere.velocityInitial[2] = 3;
+    sphere.velocityCurrent[0] = sphere.velocityInitial[0] = 0;
+    sphere.velocityCurrent[1] = sphere.velocityInitial[1] = sphere.velocityCurrent[2] = sphere.velocityInitial[2] = 3;
 
-    sphere.elasticity = 0.9;
+    sphere.accelerationCurrent[2] = -9.8;
+    toLookAt = sphere.positionCurrent;
+
+    sphere.elasticity = BALL_ELASTICITY;
     translations[2] = -10.0f;
 
 
@@ -251,8 +341,9 @@ int main(int argc, char *argv[]) {
     glutCreateWindow(WINDOW_NAME);
     glutFullScreen();
     glutReshapeFunc(handleResize);
-
+    glutIdleFunc(idle);
     glutKeyboardFunc(handleKeypress);
+    glutKeyboardUpFunc(handleUpKeypress);
     glutSpecialFunc(handleSpecialKeypress);
 
     glutDisplayFunc(draw);

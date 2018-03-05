@@ -23,25 +23,50 @@
 //    glEnd();
 //    glPopAttrib();
 //}
-enum objectType{WALL, POLE};
+enum objectType{WALL, R_POLE, L_POLE, U_POLE};
 
 class RealObject{
 public:
-    double distance;
+    GLfloat color[4];
     objectType Type;
-    axes position;
 };
 
 
 class FlatSurface: public RealObject{
 public:
-    GLfloat color[4];
     axes corners[4];
     void draw();
 };
 
+class PoleSurface: public RealObject{
+public:
+    PoleSurface();
+    axes base;
+    double radius;
+    double height;
+    void draw();
+};
+
+class FlatArrow{
+public:
+    double width;
+    axes start;
+    axes finish;
+    double yAngle;
+    double zAngle;
+    GLfloat color[4];
+    double length;
+    void drawWithPoints();
+    void drawWithAngles();
+};
+
+extern FlatArrow aimArrow;
+
+
 extern FlatSurface ground;
 
+extern PoleSurface poles[3];
+extern RealObject allObjects[];
 
 #endif //FOOTBALL_PENALTY_SHOOTER_SHAPES_H
 
