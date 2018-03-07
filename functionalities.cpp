@@ -4,11 +4,17 @@
 
 #include "functionalities.h"
 #include "shapes.h"
+#include <bits/stdc++.h>
+using namespace std;
 
 
 mode currentMode = ADJUSTING;
 bool currentlyWaiting;
 bool downKeys[127];
+bool scoredGoal;
+int goalCount, totalTries;
+
+PhysicalState sphere, *determineSphere = NULL;
 
 void handleResize(int w, int h) {
     //Tell OpenGL how to convert from coordinates to pixel values
@@ -57,6 +63,28 @@ PhysicalState::PhysicalState() {
     timePassed = 0;
     elasticity = 1.0;
 }
+
+ostream &operator << (ostream &out, PhysicalState &p){
+    out<<"Current Position : "<<endl;
+    for (int i = 0; i < 3; ++i) {
+        out<<p.positionCurrent[i]<<"    ";
+    }
+    out<<endl;
+    out<<"Current Velocity : "<<endl;
+    for (int i = 0; i < 3; ++i) {
+        out<<p.velocityCurrent[i]<<"    ";
+    }
+    out<<endl;
+    out<<"Time Passed : ";
+    out<<p.timePassed<<endl;
+
+}
+
+
+bool isItGoal(PhysicalState ball){
+    return true;
+}
+
 
 int LoadGLTexture(char *filename) {
     GLuint texture = SOIL_load_OGL_texture
@@ -115,10 +143,10 @@ void initialiseEverything() {
     aimArrow.yAngle = 0.0;
     aimArrow.length = 2.0;
 
-    aimArrow.color[0] = 0 / 255.0;
-    aimArrow.color[1] = 0 / 255.0;
+    aimArrow.color[0] = 50 / 255.0;
+    aimArrow.color[1] = 50 / 255.0;
     aimArrow.color[2] = 127 / 255.0;
-    aimArrow.color[3] = 0.5;
+    aimArrow.color[3] = 1.0;
 
 }
 

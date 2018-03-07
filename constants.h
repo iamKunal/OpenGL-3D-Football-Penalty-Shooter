@@ -12,10 +12,10 @@
 #define WINDOW_NAME "Football Penalty Shooter"
 
 #define BALL_RADIUS 0.3
-#define POLE_RADIUS 0.15 //0.15
+#define POLE_RADIUS 1.55 //0.15
 #define BALL_ELASTICITY 0.85
 
-#define POLE_HEIGHT 0.0 //2.5
+#define POLE_HEIGHT 2.0 //2.5
 #define POLE_LENGTH 5.0
 
 #define GOAL_POST_X 0.0

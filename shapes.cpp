@@ -178,9 +178,15 @@ void FlatArrow::drawWithAngles() {
 
     glRotatef(-rot, 0, 0, 1);
 
+    glPushMatrix();
+
+
+
     rot = zAngle;
 
     glRotatef(rot, cos(DEG2GRAD(rot)), 0, 0);
+
+
 
     glTranslated(start.x, 0, start.z);
     glColor4fv(color);
@@ -196,6 +202,26 @@ void FlatArrow::drawWithAngles() {
     glVertex3f(width, length - 2 * width / vector.y, 0);
     glVertex3f(0, length, 0);
     glEnd();
+    glPopMatrix();
+
+
+
+    glTranslated(start.x, 0, start.z);
+    glColor4f(0.1,0.1,0.0, 0.2);
+    glBegin(GL_QUADS);
+    glVertex3f(-width / 2, start.y, 0);
+    glVertex3f(width / 2, start.y, 0);
+    glVertex3f(width / 2, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
+    glVertex3f(-width / 2, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glVertex3f(-width, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
+    glVertex3f(width, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
+    glVertex3f(0, length - length*sin(DEG2GRAD(zAngle)), 0);
+    glEnd();
+
+
 
     glPopMatrix();
     glPopAttrib();

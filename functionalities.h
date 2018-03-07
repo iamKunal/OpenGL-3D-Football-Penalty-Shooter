@@ -10,7 +10,7 @@
 #include <GL/glut.h>
 #include "constants.h"
 #include "SOIL.h"
-
+using namespace std;
 #define DEG2GRAD(x) ((x) * PI/180.0)
 
 #define GRAD2DEG(x) ((x) * 180.0/PI)
@@ -40,8 +40,10 @@ struct PhysicalState {
     double timePassed;
 
     PhysicalState();
+    friend ostream &operator << (ostream &out, PhysicalState &p);
 };
 
+bool isItGoal(PhysicalState ball);
 
 int LoadGLTexture(char *filename);
 
@@ -79,5 +81,13 @@ extern mode currentMode;
 extern bool currentlyWaiting;
 
 extern bool downKeys[127];
+
+extern PhysicalState sphere, *determineSphere;
+
+
+extern bool scoredGoal;
+
+extern int goalCount, totalTries;
+
 
 #endif //FOOTBALL_PENALTY_SHOOTER_FUNCTIONALITIES_H
