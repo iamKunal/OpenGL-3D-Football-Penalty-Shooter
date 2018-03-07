@@ -35,7 +35,7 @@ void updatePos(PhysicalState &p, double t) {
                 v = sqrt(v);
                 p.velocityCurrent.y = -v * cos(theta) * p.elasticity;
                 p.velocityCurrent.x = v * sin(theta) * p.elasticity;
-            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleCollided[0]){
+            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleCollided[0]) {
                 poleCollided[0] = false;
             }
         }
@@ -58,14 +58,15 @@ void updatePos(PhysicalState &p, double t) {
                 p.velocityCurrent.y = v * cos(theta) * p.elasticity;
                 p.velocityCurrent.x = -v * sin(theta) * p.elasticity;
 
-            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleCollided[2]){
+            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleCollided[2]) {
                 poleCollided[2] = false;
             }
         }
     }
     {//Collision with Pole1
-        if (p.positionCurrent.x < POLE_LENGTH/2 + POLE_RADIUS && p.positionCurrent.x>-POLE_LENGTH/2 - POLE_RADIUS) {
-            axes t = {p.positionCurrent.x, GOAL_POST_Y, POLE_RADIUS+POLE_HEIGHT};
+        if (p.positionCurrent.x < POLE_LENGTH / 2 + POLE_RADIUS &&
+            p.positionCurrent.x > -POLE_LENGTH / 2 - POLE_RADIUS) {
+            axes t = {p.positionCurrent.x, GOAL_POST_Y, POLE_RADIUS + POLE_HEIGHT};
             if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && !poleCollided[1]) {
                 poleCollided[1] = true;
                 double alpha, beta, theta;
@@ -80,12 +81,19 @@ void updatePos(PhysicalState &p, double t) {
                 v = sqrt(v);
                 p.velocityCurrent.y = v * cos(theta) * p.elasticity;
                 p.velocityCurrent.z = -v * sin(theta) * p.elasticity;
-            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleCollided[1]){
+            } else if ((distanceBW(t, p.positionCurrent) <= BALL_RADIUS + POLE_RADIUS) && poleCollided[1]) {
                 poleCollided[1] = false;
             }
         }
     }
 
+    {//Collision with Defender
+        if (p.positionCurrent.x  < defender.state.positionCurrent.x + defender.width / 2.0 &&
+            p.positionCurrent.x > defender.state.positionCurrent.x - defender.width / 2.0 &&
+            p.positionCurrent.z < defender.height && p.positionCurrent.y + BALL_RADIUS/2.0 + DEFENDER_THICKNESS/2.0>= GOAL_POST_Y) {
+            p.velocityCurrent.y*=-p.elasticity;
+        }
+    }
 
     {   // Gravity and ground bouncing effects
         for (int i = 0; i < 3; ++i) {
@@ -160,10 +168,14 @@ void draw() {
 //    glVertex3f(0, 0, 0);
 //    glVertex3f(0, 0, 5);
 //    glEnd();
+    defender.draw();
 
     glPushMatrix();
     glColor3f(1.0, 1.0, 0.0);
     glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z);
+
+//    drawBitmapText("Hello World",0,0,0.5);
+
 
     glutWireSphere(BALL_RADIUS, 20, 20);
 
@@ -268,11 +280,15 @@ void idle() {
                 toLookAt = sphere.positionCurrent;
         }
         if (currentMode == SHOOTING) {
-            if( sphere.positionCurrent.y > GOAL_POST_Y || sphere.velocityCurrent.y <= 0){
-                if (!determineSphere){
+            if (sphere.positionCurrent.y > GOAL_POST_Y || sphere.velocityCurrent.y <= 0) {
+                if (!determineSphere) {
                     determineSphere = new PhysicalState;
                     *determineSphere = sphere;
-                    cout<<*determineSphere;
+                    cout << *determineSphere;
+                    scoredGoal = isItGoal(*determineSphere);
+                    if (scoredGoal) {
+                        system("paplay resources/goal.wav&");
+                    }
                 }
             }
         }
@@ -329,13 +345,17 @@ void myInit(void) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_2D);
-
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_LIGHTING); //Enable lighting
     glEnable(GL_LIGHT0); //Enable light #0
     glEnable(GL_LIGHT1); //Enable light #1
     glEnable(GL_LIGHT2); //Enable light #2
     glEnable(GL_NORMALIZE); //Automatically normalize normals
     glShadeModel(GL_SMOOTH);
+    backgroundMusicPlayer(0);
+    updateDefenderPosition(0);
+
+
 }
 
 int main(int argc, char *argv[]) {

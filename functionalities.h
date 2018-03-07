@@ -47,6 +47,7 @@ bool isItGoal(PhysicalState ball);
 
 int LoadGLTexture(char *filename);
 
+void updateDefenderPosition(int);
 
 void initialiseEverything();
 
@@ -69,8 +70,12 @@ void drawHUD();
 
 
 enum mode {
-    ADJUSTING, AIMING, POWERING, SHOOTING, REPLAY, NONE
+    ADJUSTING, AIMING, POWERING, SHOOTING, GOAL_ANIMATION,REPLAY, NONE
 };
+
+void goalAnimateCallBack(int _=0);
+void backgroundMusicPlayer(int);
+
 
 extern double powerMeter;
 
@@ -89,5 +94,6 @@ extern bool scoredGoal;
 
 extern int goalCount, totalTries;
 
+void drawBitmapText(const char *string,float x,float y,float z);
 
 #endif //FOOTBALL_PENALTY_SHOOTER_FUNCTIONALITIES_H

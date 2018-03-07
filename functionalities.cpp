@@ -5,6 +5,7 @@
 #include "functionalities.h"
 #include "shapes.h"
 #include <bits/stdc++.h>
+
 using namespace std;
 
 
@@ -46,13 +47,13 @@ double &axes::operator[](int index) {
     }
 }
 
-double distanceBW(axes axes1, axes axes2){
-    double sum=0.0;
+double distanceBW(axes axes1, axes axes2) {
+    double sum = 0.0;
     double sqr;
     for (int i = 0; i < 3; ++i) {
         sqr = axes1[i] - axes2[i];
-        sqr*=sqr;
-        sum+=sqr;
+        sqr *= sqr;
+        sum += sqr;
     }
     return sqrt(sum);
 }
@@ -64,27 +65,39 @@ PhysicalState::PhysicalState() {
     elasticity = 1.0;
 }
 
-ostream &operator << (ostream &out, PhysicalState &p){
-    out<<"Current Position : "<<endl;
+ostream &operator<<(ostream &out, PhysicalState &p) {
+    out << "Current Position : " << endl;
     for (int i = 0; i < 3; ++i) {
-        out<<p.positionCurrent[i]<<"    ";
+        out << p.positionCurrent[i] << "    ";
     }
-    out<<endl;
-    out<<"Current Velocity : "<<endl;
+    out << endl;
+    out << "Current Velocity : " << endl;
     for (int i = 0; i < 3; ++i) {
-        out<<p.velocityCurrent[i]<<"    ";
+        out << p.velocityCurrent[i] << "    ";
     }
-    out<<endl;
-    out<<"Time Passed : ";
-    out<<p.timePassed<<endl;
+    out << endl;
+    out << "Time Passed : ";
+    out << p.timePassed << endl;
 
 }
 
 
-bool isItGoal(PhysicalState ball){
-    return true;
+bool isItGoal(PhysicalState ball) {
+    if ((ball.positionCurrent.x <= -POLE_RADIUS + POLE_LENGTH / 2) &&
+        (ball.positionCurrent.x >= +POLE_RADIUS - POLE_LENGTH / 2) &&
+        (ball.positionCurrent.z <= POLE_HEIGHT) && (ball.positionCurrent.y > GOAL_POST_Y))
+        return true;
+    else
+        return false;
+
 }
 
+void backgroundMusicPlayer(int _){
+
+    if (currentMode != GOAL_ANIMATION)
+        system("paplay resources/back.wav --volume 25000 &");
+    glutTimerFunc(5*1000,backgroundMusicPlayer,0);
+}
 
 int LoadGLTexture(char *filename) {
     GLuint texture = SOIL_load_OGL_texture
@@ -148,6 +161,15 @@ void initialiseEverything() {
     aimArrow.color[2] = 127 / 255.0;
     aimArrow.color[3] = 1.0;
 
+
+    defender.color[0] = 250 / 255.0;
+    defender.color[1] = 100 / 255.0;
+    defender.color[2] = 100 / 255.0;
+    defender.color[3] = 1.0;
+
+    defender.width = DEFENDER_WIDTH;
+    defender.height = 2.3;
+    defender.state.velocityInitial.x = defender.state.velocityCurrent.x = 0.5;
 }
 
 void drawGoalPost() {
@@ -311,5 +333,36 @@ void drawHUD() {
         glPopAttrib();
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
+    }
+}
+
+void goalAnimateCallBack(int _) {
+
+
+}
+
+
+void updateDefenderPosition(int _){
+
+    defender.state.timePassed += 1/60.0;
+    double t =  1/60.0;
+    defender.acceleration();
+    for (int i = 0; i < 3; ++i) {
+        defender.state.positionCurrent[i] =
+                defender.state.velocityCurrent[i] * t + 0.5 * defender.state.accelerationCurrent[i] * t * t + defender.state.positionCurrent[i];
+        defender.state.velocityCurrent[i] = defender.state.velocityCurrent[i] + defender.state.accelerationCurrent[i] * t;
+    }
+//    if (currentMode != NONE && currentMode != GOAL_ANIMATION){
+        glutTimerFunc(1000*1/60.0, updateDefenderPosition, 1/60.0);
+//    }
+}
+
+
+void drawBitmapText(const char *string, float x, float y, float z) {
+    const char *c;
+    glRasterPos3f(x, y, z);
+
+    for (c = string; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
     }
 }

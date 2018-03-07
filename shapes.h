@@ -60,6 +60,18 @@ public:
     void drawWithAngles();
 };
 
+class Defender{
+public:
+    double width;
+    double height;
+
+    GLfloat color[4];
+
+    PhysicalState state;
+    void acceleration();
+    void draw();
+};
+
 extern FlatArrow aimArrow;
 
 
@@ -67,6 +79,7 @@ extern FlatSurface ground;
 
 extern PoleSurface poles[3];
 extern RealObject allObjects[];
+extern Defender defender;
 
 #endif //FOOTBALL_PENALTY_SHOOTER_SHAPES_H
 

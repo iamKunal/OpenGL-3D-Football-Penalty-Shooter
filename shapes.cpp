@@ -181,11 +181,9 @@ void FlatArrow::drawWithAngles() {
     glPushMatrix();
 
 
-
     rot = zAngle;
 
     glRotatef(rot, cos(DEG2GRAD(rot)), 0, 0);
-
 
 
     glTranslated(start.x, 0, start.z);
@@ -205,31 +203,53 @@ void FlatArrow::drawWithAngles() {
     glPopMatrix();
 
 
-
     glTranslated(start.x, 0, start.z);
-    glColor4f(0.1,0.1,0.0, 0.2);
+    glColor4f(0.1, 0.1, 0.0, 0.2);
     glBegin(GL_QUADS);
-    glVertex3f(-width / 2, start.y, 0);
-    glVertex3f(width / 2, start.y, 0);
-    glVertex3f(width / 2, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
-    glVertex3f(-width / 2, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
+    glVertex3f(-width / 2, start.y, -BALL_RADIUS + 0.001f);
+    glVertex3f(width / 2, start.y, -BALL_RADIUS + 0.001f);
+    glVertex3f(width / 2, length - 2 * width / vector.y - length * sin(DEG2GRAD(zAngle)), -BALL_RADIUS + 0.001f);
+    glVertex3f(-width / 2, length - 2 * width / vector.y - length * sin(DEG2GRAD(zAngle)), -BALL_RADIUS + 0.001f);
     glEnd();
 
     glBegin(GL_TRIANGLES);
-    glVertex3f(-width, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
-    glVertex3f(width, length - 2 * width / vector.y - length*sin(DEG2GRAD(zAngle)), 0);
-    glVertex3f(0, length - length*sin(DEG2GRAD(zAngle)), 0);
+    glVertex3f(-width, length - 2 * width / vector.y - length * sin(DEG2GRAD(zAngle)), -BALL_RADIUS + 0.001f);
+    glVertex3f(width, length - 2 * width / vector.y - length * sin(DEG2GRAD(zAngle)), -BALL_RADIUS + 0.001f);
+    glVertex3f(0, length - length * sin(DEG2GRAD(zAngle)), -BALL_RADIUS + 0.001f);
     glEnd();
-
 
 
     glPopMatrix();
     glPopAttrib();
 }
 
+void Defender::acceleration() {
+    if (this->state.positionCurrent.x >= POLE_LENGTH/2.0 - this->width/2 -POLE_RADIUS || this->state.positionCurrent.x <= -POLE_LENGTH/2.0 + this->width/2 + POLE_RADIUS){
+        this->state.velocityCurrent.x *=-1;
+
+    }
+}
+
+void Defender::draw(){
+    glPushMatrix();
+    glPushAttrib(GL_CURRENT_BIT);
+
+
+    glColor4fv(color);
+
+    glTranslatef(defender.state.positionCurrent.x,GOAL_POST_Y,(this->height)/2 - BALL_RADIUS);
+    glScalef((this->width)/DEFENDER_THICKNESS, 1.0, (this->height)/DEFENDER_THICKNESS);
+
+    glutSolidCube(DEFENDER_THICKNESS);
+
+    glPopAttrib();
+    glPopMatrix();
+}
+
 FlatArrow aimArrow;
 
 PoleSurface poles[3];
 
+Defender defender;
 
 RealObject allObjects[] = {poles[0], poles[1], poles[2]};
