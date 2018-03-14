@@ -95,7 +95,7 @@ bool isItGoal(PhysicalState ball) {
 void backgroundMusicPlayer(int _){
 
     if (currentMode != GOAL_ANIMATION)
-        system("paplay resources/back.wav --volume 25000 &");
+        system("paplay resources/back.wav --volume 30000 &");
     glutTimerFunc(5*1000,backgroundMusicPlayer,0);
 }
 
@@ -170,6 +170,10 @@ void initialiseEverything() {
     defender.width = DEFENDER_WIDTH;
     defender.height = 2.3;
     defender.state.velocityInitial.x = defender.state.velocityCurrent.x = 0.5;
+
+
+    sphereCamera.yAngle = -90.0f;
+    sphereCamera.xAngle = 15.0f;
 }
 
 void drawGoalPost() {

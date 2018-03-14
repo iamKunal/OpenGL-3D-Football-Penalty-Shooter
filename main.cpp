@@ -355,6 +355,7 @@ void myInit(void) {
     backgroundMusicPlayer(0);
     updateDefenderPosition(0);
 
+    glEnable(GL_MULTISAMPLE);
 
 }
 
@@ -372,7 +373,7 @@ int main(int argc, char *argv[]) {
 
 
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
     glutInitWindowSize(WIDTH, HEIGHT);
     glutCreateWindow(WINDOW_NAME);
     glutFullScreen();
