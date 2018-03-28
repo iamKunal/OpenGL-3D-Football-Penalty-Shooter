@@ -56,7 +56,7 @@ void drawGoalPost();
 void cameraPosition(axes point, double distance, double xAngle, double zAngle);
 
 struct camera {
-    double xAngle, yAngle;
+    double xAngle, zAngle;
     double distance;
 
     camera();

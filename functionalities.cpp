@@ -173,7 +173,7 @@ void initialiseEverything() {
     defender.state.velocityInitial.x = defender.state.velocityCurrent.x = 0.5;
 
 
-    sphereCamera.yAngle = -90.0f;
+    sphereCamera.zAngle = -90.0f;
     sphereCamera.xAngle = 15.0f;
 
 }
@@ -209,7 +209,7 @@ void cameraPosition(axes point, double distance, double zAngle, double xAngle) {
 }
 
 camera::camera() {
-    xAngle = yAngle = 0.0;
+    xAngle = zAngle = 0.0;
     distance = 5.0;
 }
 

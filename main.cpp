@@ -138,7 +138,7 @@ axes toLookAt;
 
 void draw() {
     glLoadIdentity(); //Reset the drawing perspective
-    cameraPosition(toLookAt, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.yAngle);
+    cameraPosition(toLookAt, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.zAngle);
     if (firstTime){
         glutWarpPointer(WIDTH/2, HEIGHT/2);
         firstTime = false;
@@ -307,22 +307,22 @@ void handleUpKeypress(unsigned char key, int x, int y) {
 }
 
 void handleSpecialKeypress(int key, int x, int y) {
-    if (currentMode == ADJUSTING || currentMode == REPLAY) {
-        switch (key) {
-            case GLUT_KEY_UP:
-                sphereCamera.xAngle += 1.0f;
-                break;
-            case GLUT_KEY_DOWN:
-                sphereCamera.xAngle -= 1.0f;
-                break;
-            case GLUT_KEY_LEFT:
-                sphereCamera.yAngle -= 1.0f;
-                break;
-            case GLUT_KEY_RIGHT:
-                sphereCamera.yAngle += 1.0f;
-                break;
-        }
-    }
+//    if (currentMode == ADJUSTING || currentMode == REPLAY) {
+//        switch (key) {
+//            case GLUT_KEY_UP:
+//                sphereCamera.xAngle += 1.0f;
+//                break;
+//            case GLUT_KEY_DOWN:
+//                sphereCamera.xAngle -= 1.0f;
+//                break;
+//            case GLUT_KEY_LEFT:
+//                sphereCamera.zAngle -= 1.0f;
+//                break;
+//            case GLUT_KEY_RIGHT:
+//                sphereCamera.zAngle += 1.0f;
+//                break;
+//        }
+//    }
     if (currentMode == AIMING) {
         switch (key) {
             case GLUT_KEY_UP:
@@ -345,7 +345,7 @@ template <typename T> int sgn(T val) {
 }
 void handlePassiveMouse(int x, int y) {
 //    if (currentMode == ADJUSTING) {
-    sphereCamera.yAngle = -90 + (x-WIDTH/2)*90/WIDTH;
+    sphereCamera.zAngle = -90 + (x-WIDTH/2)*90/WIDTH;
     sphereCamera.xAngle = 30 + -1*(y-HEIGHT/2)*60/HEIGHT;
 //    cout << x << ' ' << y << endl;
 //    glutWarpPointer(WIDTH/2, HEIGHT/2);
