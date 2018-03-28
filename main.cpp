@@ -88,10 +88,11 @@ void updatePos(PhysicalState &p, double t) {
     }
 
     {//Collision with Defender
-        if (p.positionCurrent.x  < defender.state.positionCurrent.x + defender.width / 2.0 &&
+        if (p.positionCurrent.x < defender.state.positionCurrent.x + defender.width / 2.0 &&
             p.positionCurrent.x > defender.state.positionCurrent.x - defender.width / 2.0 &&
-            p.positionCurrent.z < defender.height && p.positionCurrent.y + BALL_RADIUS/2.0 + DEFENDER_THICKNESS/2.0>= GOAL_POST_Y) {
-            p.velocityCurrent.y*=-p.elasticity;
+            p.positionCurrent.z < defender.height &&
+            p.positionCurrent.y + BALL_RADIUS / 2.0 + DEFENDER_THICKNESS / 2.0 >= GOAL_POST_Y) {
+            p.velocityCurrent.y *= -p.elasticity;
         }
     }
 
@@ -138,7 +139,10 @@ axes toLookAt;
 void draw() {
     glLoadIdentity(); //Reset the drawing perspective
     cameraPosition(toLookAt, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.yAngle);
-
+    if (firstTime){
+        glutWarpPointer(WIDTH/2, HEIGHT/2);
+        firstTime = false;
+    }
     GLfloat lightColor0[] = {1.0f, 1.0f, 1.0f, 0.7f}; //Color (0.5, 0.5, 0.5)
     GLfloat lightPos0[] = {0.0f, -100.0f, 100.0f, 1.0f}; //Positioned at (4, 0, 8)
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
@@ -157,17 +161,17 @@ void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW); //Switch to the drawing perspective
 
-//    glColor3f(1, 0, 0);
-//    glBegin(GL_LINES);
-//    glVertex3f(0, 0, 0);
-//    glVertex3f(5, 0, 0);
-//    glColor3f(0, 1, 0);
-//    glVertex3f(0, 0, 0);
-//    glVertex3f(0, 5, 0);
-//    glColor3f(0, 0, 1);
-//    glVertex3f(0, 0, 0);
-//    glVertex3f(0, 0, 5);
-//    glEnd();
+    glColor3f(1, 0, 0);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(5, 0, 0);
+    glColor3f(0, 1, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 5, 0);
+    glColor3f(0, 0, 1);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 5);
+    glEnd();
     defender.draw();
 
     glPushMatrix();
@@ -336,6 +340,17 @@ void handleSpecialKeypress(int key, int x, int y) {
         }
     }
 }
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+void handlePassiveMouse(int x, int y) {
+//    if (currentMode == ADJUSTING) {
+    sphereCamera.yAngle = -90 + (x-WIDTH/2)*90/WIDTH;
+    sphereCamera.xAngle = 30 + -1*(y-HEIGHT/2)*60/HEIGHT;
+//    cout << x << ' ' << y << endl;
+//    glutWarpPointer(WIDTH/2, HEIGHT/2);
+
+}
 
 void myInit(void) {
     glClearColor(137 / 255.0, 206 / 255.0, 255 / 255.0, 0);
@@ -354,7 +369,7 @@ void myInit(void) {
     glShadeModel(GL_SMOOTH);
     backgroundMusicPlayer(0);
     updateDefenderPosition(0);
-
+    glutSetCursor(GLUT_CURSOR_NONE);
     glEnable(GL_MULTISAMPLE);
 
 }
@@ -382,7 +397,8 @@ int main(int argc, char *argv[]) {
     glutKeyboardFunc(handleKeypress);
     glutKeyboardUpFunc(handleUpKeypress);
     glutSpecialFunc(handleSpecialKeypress);
-
+    glutPassiveMotionFunc(handlePassiveMouse);
+    glutMouseFunc(NULL);
     glutDisplayFunc(draw);
     myInit();
 

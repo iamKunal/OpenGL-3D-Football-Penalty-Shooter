@@ -96,4 +96,7 @@ extern int goalCount, totalTries;
 
 void drawBitmapText(const char *string,float x,float y,float z);
 
+extern int mouseX, mouseY;
+
+extern bool firstTime;
 #endif //FOOTBALL_PENALTY_SHOOTER_FUNCTIONALITIES_H

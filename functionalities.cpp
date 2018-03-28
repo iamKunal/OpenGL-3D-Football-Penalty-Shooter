@@ -14,7 +14,8 @@ bool currentlyWaiting;
 bool downKeys[127];
 bool scoredGoal;
 int goalCount, totalTries;
-
+int mouseX, mouseY;
+bool firstTime = true;
 PhysicalState sphere, *determineSphere = NULL;
 
 void handleResize(int w, int h) {
@@ -99,26 +100,26 @@ void backgroundMusicPlayer(int _){
     glutTimerFunc(5*1000,backgroundMusicPlayer,0);
 }
 
-int LoadGLTexture(char *filename) {
-    GLuint texture = SOIL_load_OGL_texture
-            (
-                    filename,
-                    SOIL_LOAD_AUTO,
-                    SOIL_CREATE_NEW_ID,
-                    SOIL_FLAG_INVERT_Y
-            );
-
-
-    if (texture == 0)
-        return false;
-
-
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    return texture;
-}
+//int LoadGLTexture(char *filename) {
+//    GLuint texture = SOIL_load_OGL_texture
+//            (
+//                    filename,
+//                    SOIL_LOAD_AUTO,
+//                    SOIL_CREATE_NEW_ID,
+//                    SOIL_FLAG_INVERT_Y
+//            );
+//
+//
+//    if (texture == 0)
+//        return false;
+//
+//
+//    glBindTexture(GL_TEXTURE_2D, texture);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//
+//    return texture;
+//}
 
 
 void initialiseEverything() {
@@ -174,6 +175,7 @@ void initialiseEverything() {
 
     sphereCamera.yAngle = -90.0f;
     sphereCamera.xAngle = 15.0f;
+
 }
 
 void drawGoalPost() {
