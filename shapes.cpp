@@ -9,14 +9,40 @@
 
 
 void FlatSurface::draw() {
-    glPushAttrib(GL_CURRENT_BIT);
-    glColor3fv(color);
+
+    start2DTexture(groundTexture);
+
     glBegin(GL_QUADS);
-    for (int i = 0; i < 4; ++i) {
-        glVertex3d(corners[i].x, corners[i].y, corners[i].z);
-    }
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(corners[0].x, corners[0].y, corners[0].z);
+    glTexCoord2f(0.0, GRASS_TEXT_MULTIPLY);
+    glVertex3f(corners[1].x, corners[1].y, corners[1].z);
+    glTexCoord2f(GRASS_TEXT_MULTIPLY, GRASS_TEXT_MULTIPLY);
+    glVertex3f(corners[2].x, corners[2].y, corners[2].z);
+    glTexCoord2f(GRASS_TEXT_MULTIPLY, 0.0);
+    glVertex3f(corners[3].x, corners[3].y, corners[3].z);
     glEnd();
-    glPopAttrib();
+
+    end2DTexture();
+
+    start2DTexture(ads);
+    for (int i = 0; i < 4; ++i) {
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0, 1);
+        glVertex3f(corners[i].x, corners[i].y, corners[i].z);
+        glTexCoord2f(1*10, 1);
+        glVertex3f(corners[(i + 1) % 4].x, corners[(i + 1) % 4].y, corners[(i + 1) % 4].z);
+        glTexCoord2f(1*10, 0);
+        glVertex3f(corners[(i + 1) % 4].x, corners[(i + 1) % 4].y, corners[(i + 1) % 4].z + AD_HEIGHT);
+        glTexCoord2f(0.0, 0.0);
+        glVertex3f(corners[i].x, corners[i].y, corners[(i + 1) % 4].z + AD_HEIGHT);
+        glEnd();
+    }
+
+
+    end2DTexture();
+
 }
 
 FlatSurface ground;
@@ -114,6 +140,7 @@ void PoleSurface::draw() {
         }
 
     }
+    gluDeleteQuadric(quadric);
     glPopMatrix();
     glPopAttrib();
 }
@@ -204,7 +231,7 @@ void FlatArrow::drawWithAngles() {
 
 
     glTranslated(start.x, 0, start.z);
-    glColor4f(0.1, 0.1, 0.0, 0.2);
+    glColor4f(0.0, 0.5, 0.0, 1.0);
     glBegin(GL_QUADS);
     glVertex3f(-width / 2, start.y, -BALL_RADIUS + 0.001f);
     glVertex3f(width / 2, start.y, -BALL_RADIUS + 0.001f);
@@ -224,26 +251,44 @@ void FlatArrow::drawWithAngles() {
 }
 
 void Defender::acceleration() {
-    if (this->state.positionCurrent.x >= POLE_LENGTH/2.0 - this->width/2 -POLE_RADIUS || this->state.positionCurrent.x <= -POLE_LENGTH/2.0 + this->width/2 + POLE_RADIUS){
-        this->state.velocityCurrent.x *=-1;
-
+    if (this->state.positionCurrent.x >= POLE_LENGTH / 2.0 - this->width / 2 - POLE_RADIUS ||
+        this->state.positionCurrent.x <= -POLE_LENGTH / 2.0 + this->width / 2 + POLE_RADIUS) {
+        this->state.velocityCurrent.x *= -1;
     }
 }
 
-void Defender::draw(){
-    glPushMatrix();
-    glPushAttrib(GL_CURRENT_BIT);
+void Defender::draw() {
+    start2DTexture(defenderTexture);
+//    glPushMatrix();
+//    glPushAttrib(GL_CURRENT_BIT);
+//
+//
+//    glColor4fv(color);
+
+    glTranslatef(defender.state.positionCurrent.x, GOAL_POST_Y, (this->height) / 2 - BALL_RADIUS);
 
 
-    glColor4fv(color);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 1);
+    glVertex3f(-this->width / 2, 0, -this->height / 2);
+    glTexCoord2f(1, 1);
+    glVertex3f(this->width / 2, 0, -this->height / 2);
+    glTexCoord2f(1, 0.0);
+    glVertex3f(this->width / 2, 0, this->height / 2);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(-this->width / 2, 0, this->height / 2);
+    glEnd();
 
-    glTranslatef(defender.state.positionCurrent.x,GOAL_POST_Y,(this->height)/2 - BALL_RADIUS);
-    glScalef((this->width)/DEFENDER_THICKNESS, 1.0, (this->height)/DEFENDER_THICKNESS);
+//    glScalef((this->width)/DEFENDER_THICKNESS, 1.0, (this->height)/DEFENDER_THICKNESS);
+//
+//    glutSolidCube(DEFENDER_THICKNESS);
 
-    glutSolidCube(DEFENDER_THICKNESS);
+    glEnd();
 
-    glPopAttrib();
-    glPopMatrix();
+    end2DTexture();
+    //
+//    glPopAttrib();
+//    glPopMatrix();
 }
 
 FlatArrow aimArrow;

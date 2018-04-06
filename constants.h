@@ -19,18 +19,32 @@
 #define POLE_LENGTH 5.0
 
 #define GOAL_POST_X 0.0
-#define GOAL_POST_Y 5.0
+#define GOAL_POST_Y 7.0
 
 #define DEFENDER_THICKNESS 0.2
 #define DEFENDER_WIDTH 1.5
-
+#define DEFENDER_SPEED 1.5
 #define POWER_METER_VELOCITY 0.2
 
 #define BALL_MAX_SPEED 9
 #define BALL_MIN_SPEED 4
 
+#define GRASS_TEXT_MULTIPLY 20
 
 #define THRESHOLD_ZERO 0.03
+
+#define RESET_TIME 5
+
+#define FONT_SIZE 0.66
+
+#define MIN_SPHERE_CAMERA_DISTANCE 4.4
+
+#define MAX_SPHERE_CAMERA_DISTANCE 15
+
+#define EXIT_KEY 'q'
+
+#define AD_HEIGHT 1
+
 const double PI = 3.141592653589793238L;
 
 

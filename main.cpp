@@ -10,10 +10,12 @@
 using namespace std;
 
 
-double translations[3];
-
-
 bool poleCollided[3];
+bool stopEverything = false;
+unsigned int Tries, Goals;
+vector<float> currentTextColor = {1, 1, 1, 1};
+
+void showScore();
 
 void updatePos(PhysicalState &p, double t) {
     p.timePassed += t;
@@ -91,7 +93,7 @@ void updatePos(PhysicalState &p, double t) {
         if (p.positionCurrent.x < defender.state.positionCurrent.x + defender.width / 2.0 &&
             p.positionCurrent.x > defender.state.positionCurrent.x - defender.width / 2.0 &&
             p.positionCurrent.z < defender.height &&
-            p.positionCurrent.y + BALL_RADIUS / 2.0 + DEFENDER_THICKNESS / 2.0 >= GOAL_POST_Y) {
+            p.positionCurrent.y + BALL_RADIUS / 2.0 + DEFENDER_THICKNESS / 2.0 >= GOAL_POST_Y && !determineSphere) {
             p.velocityCurrent.y *= -p.elasticity;
         }
     }
@@ -118,29 +120,47 @@ void updatePos(PhysicalState &p, double t) {
             p.positionCurrent[2] = 0;
         }
     }
-    if (p.positionCurrent.y > 15.0 || p.positionCurrent.y < -10.0) {
+    if (p.positionCurrent.y + BALL_RADIUS > 20.0 || p.positionCurrent.y - BALL_RADIUS < -20.0) {
         p.velocityCurrent.y = -p.velocityCurrent.y;
+    }
+    if (p.positionCurrent.x + BALL_RADIUS > 20.0 || p.positionCurrent.x - BALL_RADIUS < -20.0) {
+        p.velocityCurrent.x = -p.velocityCurrent.x;
+    }
+}
+
+
+void renderBitmapString(
+        float x,
+        float y,
+        float z,
+        void *font,
+        char *string) {
+
+    char *c;
+    glRasterPos3f(x, y, z);
+    for (c = string; *c != '\0'; c++) {
+        glutBitmapCharacter(font, *c);
     }
 }
 
 void updatePosCallBack(int _) {
-    if (currentMode != SHOOTING) {
+    if (currentMode != SHOOTING && currentlyWaiting) {
         currentMode = SHOOTING;
         currentlyWaiting = false;
     }
     float fps = 60;
-
-    updatePos(sphere, 1.0 / fps);
-    glutTimerFunc(100 / fps, updatePosCallBack, 0);
+    if (currentMode == SHOOTING) {
+        updatePos(sphere, 1.0 / fps);
+        glutTimerFunc(100 / fps, updatePosCallBack, 0);
+    }
 }
 
-axes toLookAt;
 
 void draw() {
     glLoadIdentity(); //Reset the drawing perspective
     cameraPosition(toLookAt, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.zAngle);
-    if (firstTime){
-        glutWarpPointer(WIDTH/2, HEIGHT/2);
+    if (firstTime) {
+        glutWarpPointer(WIDTH / 2, HEIGHT);
         firstTime = false;
     }
     GLfloat lightColor0[] = {1.0f, 1.0f, 1.0f, 0.7f}; //Color (0.5, 0.5, 0.5)
@@ -157,61 +177,133 @@ void draw() {
     glLightfv(GL_LIGHT2, GL_DIFFUSE, lightColor2);
     glLightfv(GL_LIGHT2, GL_POSITION, lightPos2);
 
-//    glLightfv(GL_LIGHT1, GL_POSITION, lightPos1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW); //Switch to the drawing perspective
 
-    glColor3f(1, 0, 0);
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(5, 0, 0);
-    glColor3f(0, 1, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 5, 0);
-    glColor3f(0, 0, 1);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, 5);
-    glEnd();
-    defender.draw();
+
+//    glColor3f(1, 0, 0);
+//    glBegin(GL_LINES);
+//    glVertex3f(0, 0, 0);
+//    glVertex3f(5, 0, 0);
+//    glColor3f(0, 1, 0);
+//    glVertex3f(0, 0, 0);
+//    glVertex3f(0, 5, 0);
+//    glColor3f(0, 0, 1);
+//    glVertex3f(0, 0, 0);
+//    glVertex3f(0, 0, 5);
+//    glEnd();
+
+
 
     glPushMatrix();
     glColor3f(1.0, 1.0, 0.0);
     glTranslatef(sphere.positionCurrent.x, sphere.positionCurrent.y, sphere.positionCurrent.z);
-
-//    drawBitmapText("Hello World",0,0,0.5);
-
-
-    glutWireSphere(BALL_RADIUS, 20, 20);
-
+    glutSolidSphere(BALL_RADIUS, 20, 20);
     glPopMatrix();
-    ground.draw();
+
+//    glTranslatef(0,0,0);
+//        glScalef(2.0,2.0,1.0);
 
     glPushMatrix();
-
     glPushAttrib(GL_CURRENT_BIT);
     glColor4f(1.0, 1.0, 1.0, 0.7);
     drawGoalPost();
 
     glPopAttrib();
     glPopMatrix();
-    if (currentMode == POWERING || currentMode == AIMING)
+
+    if (currentMode == POWERING || currentMode == AIMING) {
         aimArrow.drawWithAngles();
+    }
+    drawChalkLines();
+
+//    renderBitmapString(0, 0, 0.5, GLUT_BITMAP_HELVETICA_18, "HELLO");
+
+    //Draw all transparent textured objects here:
 
 
-    glDisable(GL_LIGHTING);
-
+    ground.draw();
+    defender.draw();
+    showScore();
+//    loadTextureFile("");
     drawHUD();
 
-    glEnable(GL_LIGHTING);
     glutSwapBuffers();
     glutPostRedisplay();
 }
 
+void showScore() {
+    glPushMatrix();
+    glTranslatef(0, GOAL_POST_Y, POLE_HEIGHT + BALL_RADIUS);
+
+    glDisable(GL_LIGHTING);
+
+    glPushMatrix();
+    glTranslatef(-POLE_LENGTH / 2.0 - BALL_RADIUS / 2.0, 0.0001, 0);
+    glColor4f(125 / 255.0, 178 / 255.0, 209 / 255.0, 0.5);
+    glScalef(POLE_LENGTH + BALL_RADIUS, 1, 1);
+    glBegin(GL_QUADS);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 1);
+    glVertex3f(1, 0, 1);
+    glVertex3f(1, 0, 0);
+    glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-POLE_LENGTH / 2.0 - BALL_RADIUS / 2.0, 0.0001, 1);
+//    glColor4f(133/255.0, 193/255.0, 162/255.0,0.8);
+    glColor4f(178 / 255.0, 255 / 255.0, 215 / 255.0, 0.5);
+    glScalef(POLE_LENGTH + BALL_RADIUS, 1, 1);
+    glBegin(GL_QUADS);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 1);
+    glVertex3f(1, 0, 1);
+    glVertex3f(1, 0, 0);
+    glEnd();
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
+
+    glPushMatrix();
+    currentTextColor = {24 / 255.0, 163 / 255.0, 24 / 255.0, 1.0};
+    glTranslatef(-POLE_LENGTH / 2, 0, 1);
+//    glScalef(FONT_SIZE,FONT_SIZE,1.0);
+    writeText("GOALS", font, LEFT);
+    glPopMatrix();
+
+    glPushMatrix();
+    currentTextColor = {32 / 255.0, 140 / 255.0, 32 / 255.0, 1.0};
+    glTranslatef(POLE_LENGTH / 2, 0, 1);
+//    glScalef(FONT_SIZE,FONT_SIZE,FONT_SIZE);
+    writeText(to_string(Goals), font, RIGHT);
+    glPopMatrix();
+
+    glPushMatrix();
+    currentTextColor = {27 / 255.0, 92 / 255.0, 145 / 255.0, 1.0};
+    glTranslatef(-POLE_LENGTH / 2, 0, 0);
+//    glScalef(FONT_SIZE,FONT_SIZE,1.0);
+    writeText("TRIES", font, LEFT);
+    glPopMatrix();
+
+    glPushMatrix();
+    currentTextColor = {0.1, 0.1, 1.0, 1.0};
+    glTranslatef(POLE_LENGTH / 2, 0, 0);
+//    glScalef(FONT_SIZE,FONT_SIZE,FONT_SIZE);
+    writeText(to_string(Tries), font, RIGHT);
+    glPopMatrix();
+
+
+    glPopMatrix();
+}
+
 void incrementPowerMeter(int _) {
-    if (powerMeter >= 1.0) {
-        downKeys[' '] = false;
-    } else if (!currentlyWaiting && currentMode == POWERING) {
-        powerMeter += 0.015;
+    static int up = 1;
+    if (powerMeter >1.0 || powerMeter < 0.0) {
+        up *= -1;
+    }
+    if (!currentlyWaiting && currentMode == POWERING) {
+        powerMeter += up * 0.015;
         glutTimerFunc(1000 * 1 / 60.0, incrementPowerMeter, 0);
     }
 }
@@ -227,30 +319,37 @@ void update_callback(int _) {
 
 void handleKeypress(unsigned char key, //The key that was pressed
                     int x, int y) {    //The current mouse coordinates
-    downKeys[key] = true;
-    if (currentMode == ADJUSTING || currentMode == REPLAY) {
+    if (currentMode != HELP) {
         switch (key) {
             case '+':
                 sphereCamera.distance -= 0.1f;
+                sphereCamera.distance += (sphereCamera.distance < MIN_SPHERE_CAMERA_DISTANCE ? 0.1f : 0);
+//            cout<<sphereCamera.distance<<endl;
+
                 break;
             case '-':
                 sphereCamera.distance += 0.1f;
+                sphereCamera.distance -= (sphereCamera.distance > MAX_SPHERE_CAMERA_DISTANCE ? 0.1f : 0);
+//            cout<<sphereCamera.distance<<endl;
                 break;
+        }
+    } else {
+        if (key == 27) {
+            currentMode = ADJUSTING;
+        }
+    }
+    downKeys[key] = true;
+    if (currentMode == ADJUSTING) {
+        switch (key) {
             case '\r':
                 currentMode = AIMING;
                 break;
-            case 27: //Escape key
+            case EXIT_KEY: //Escape key
                 exit(0); //Exit the program
         }
     }
     if (currentMode == AIMING) {
         switch (key) {
-            case '+':
-                sphereCamera.distance -= 0.1f;
-                break;
-            case '-':
-                sphereCamera.distance += 0.1f;
-                break;
             case ' ':
                 currentMode = POWERING;
                 glutTimerFunc(1000 * 1 / 60.0, incrementPowerMeter, 0);
@@ -259,6 +358,7 @@ void handleKeypress(unsigned char key, //The key that was pressed
                 currentMode = ADJUSTING;
         }
     }
+
 }
 
 void idle() {
@@ -272,27 +372,30 @@ void idle() {
                     sin(DEG2GRAD(aimArrow.zAngle)) * BALL_MAX_SPEED * powerMeter + BALL_MIN_SPEED;
             if (powerMeter >= 1.0)
                 powerMeter = 1.0;
-            glutTimerFunc(1000, updatePosCallBack, 0);
+            glutTimerFunc(10, updatePosCallBack, 0);
             currentlyWaiting = true;
         }
         if (currentMode == POWERING && downKeys[27]) {
             currentMode = AIMING;
             powerMeter = 0.0;
         }
-        if (currentMode == REPLAY || currentMode == SHOOTING) {
+        if (currentMode == SHOOTING) {
             if (sphere.positionCurrent.y <= GOAL_POST_Y)
                 toLookAt = sphere.positionCurrent;
         }
         if (currentMode == SHOOTING) {
             if (sphere.positionCurrent.y > GOAL_POST_Y || sphere.velocityCurrent.y <= 0) {
-                if (!determineSphere) {
+                if (!determineSphere && !stopEverything) {
                     determineSphere = new PhysicalState;
                     *determineSphere = sphere;
-                    cout << *determineSphere;
+//                    cout << *determineSphere;
                     scoredGoal = isItGoal(*determineSphere);
                     if (scoredGoal) {
+                        Goals++;
                         system("paplay resources/goal.wav&");
                     }
+                    glutTimerFunc(1000 * RESET_TIME, initialiseEverythingCallback, 0);
+                    Tries++;
                 }
             }
         }
@@ -301,6 +404,8 @@ void idle() {
     }
     glutPostRedisplay();
 }
+
+axes toLookAt;
 
 void handleUpKeypress(unsigned char key, int x, int y) {
     downKeys[key] = false;
@@ -324,32 +429,57 @@ void handleSpecialKeypress(int key, int x, int y) {
 //        }
 //    }
     if (currentMode == AIMING) {
+//    glTranslatef(36.0, 0, 0);
+//    glScalef(-1.0, 1.0, 1.0);
+//    glColor4f(0.1, 0.1, 0.1, 1.0);
+//    glBegin(GL_QUADS);
+//    glVertex2f(-10.0, -0.2);
+//    glVertex2f(5.0, -0.2);
+//    glVertex2f(5.0, 0.2);
+//    glVertex2f(-10.0, 0.2);
+//    glEnd();
+//    glBegin(GL_TRIANGLES);
+//
+//    glVertex2f(5.0, -0.4);
+//    glVertex2f(8.0, 0.0);
+//    glVertex2f(5.0, 0.4);
+//    glEnd();
+//
+//    glColor3f(0.3, 0.3, 1.0);
+//    glTranslatef(18, 0, 0);
+//    glBegin(GL_LINES);
+//    glVertex2f(-10, 0);
+//    glVertex2f(10.0, 0);
+//    glEnd();
+        const float increment=2.0f;
         switch (key) {
             case GLUT_KEY_UP:
-                aimArrow.zAngle += 1.0f;
+                aimArrow.zAngle += (aimArrow.zAngle>50?0:increment);
                 break;
             case GLUT_KEY_DOWN:
-                aimArrow.zAngle -= 1.0f;
+                aimArrow.zAngle -= (aimArrow.zAngle<0.01?0:increment);
                 break;
             case GLUT_KEY_LEFT:
-                aimArrow.yAngle -= 1.0f;
+                aimArrow.yAngle -= (aimArrow.yAngle<-60?0:increment);
                 break;
             case GLUT_KEY_RIGHT:
-                aimArrow.yAngle += 1.0f;
+                aimArrow.yAngle += (aimArrow.yAngle>60?0:increment);
                 break;
         }
     }
 }
-template <typename T> int sgn(T val) {
+
+template<typename T>
+int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
+
 void handlePassiveMouse(int x, int y) {
 //    if (currentMode == ADJUSTING) {
-    sphereCamera.zAngle = -90 + (x-WIDTH/2)*90/WIDTH;
-    sphereCamera.xAngle = 30 + -1*(y-HEIGHT/2)*60/HEIGHT;
-//    cout << x << ' ' << y << endl;
-//    glutWarpPointer(WIDTH/2, HEIGHT/2);
-
+    if (currentMode != HELP) {
+        sphereCamera.zAngle = -90 + (x - WIDTH / 2) * 90 / WIDTH;
+        sphereCamera.xAngle = 45 + -1 * (y) * 30 / HEIGHT;
+    }
 }
 
 void myInit(void) {
@@ -362,6 +492,7 @@ void myInit(void) {
     glEnable(GL_TEXTURE_2D);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_LIGHTING); //Enable lighting
+
     glEnable(GL_LIGHT0); //Enable light #0
     glEnable(GL_LIGHT1); //Enable light #1
     glEnable(GL_LIGHT2); //Enable light #2
@@ -375,17 +506,9 @@ void myInit(void) {
 }
 
 int main(int argc, char *argv[]) {
+//    convertToTexture("resources/texture.txt", "resources/texture.texture");
     initialiseEverything();
-    sphere.positionInitial.x = sphere.positionCurrent.x = 0.0;
-    sphere.velocityCurrent[0] = sphere.velocityInitial[0] = 0;
-    sphere.velocityCurrent[1] = sphere.velocityInitial[1] = sphere.velocityCurrent[2] = sphere.velocityInitial[2] = 3;
-
-    sphere.accelerationCurrent[2] = -9.8;
-    toLookAt = sphere.positionCurrent;
-
-    sphere.elasticity = BALL_ELASTICITY;
-    translations[2] = -10.0f;
-
+    currentMode = HELP;
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
@@ -398,11 +521,16 @@ int main(int argc, char *argv[]) {
     glutKeyboardUpFunc(handleUpKeypress);
     glutSpecialFunc(handleSpecialKeypress);
     glutPassiveMotionFunc(handlePassiveMouse);
+//    groundTexture = LoadBMP("resources/grass.bmp");
+    groundTexture = convertAndLoadTexture("resources/grass.txt");
+    defenderTexture = convertAndLoadTexture("resources/defender.txt");
+    font = convertAndLoadTexture("resources/fonts/Ubuntu Mono Nerd Font Complete Mono.txt");
+    ads = convertAndLoadTexture("resources/ads.txt");
     glutMouseFunc(NULL);
     glutDisplayFunc(draw);
     myInit();
 
-//    glutTimerFunc(25, update_callback, 0);
+    glutTimerFunc(25, update_callback, 0);
     glutMainLoop();
 
     return 0;
