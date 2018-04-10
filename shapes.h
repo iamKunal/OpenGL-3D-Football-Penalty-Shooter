@@ -64,7 +64,7 @@ class Defender{
 public:
     double width;
     double height;
-
+    double armRot;
     GLfloat color[4];
 
     PhysicalState state;

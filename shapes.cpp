@@ -266,7 +266,7 @@ void Defender::draw() {
 //    glColor4fv(color);
 
     glTranslatef(defender.state.positionCurrent.x, GOAL_POST_Y, (this->height) / 2 - BALL_RADIUS);
-
+//    glRotatef(armRot, 0,1,0);
 
     glBegin(GL_QUADS);
     glTexCoord2f(0.0, 1);
@@ -286,7 +286,48 @@ void Defender::draw() {
     glEnd();
 
     end2DTexture();
-    //
+
+    start2DTexture(leftArm);
+
+    float displacex = -0.3;
+    float displacey = 0.63;
+    glTranslatef(defender.state.positionCurrent.x, GOAL_POST_Y, (this->height) / 2 - BALL_RADIUS);
+    glTranslatef(this->width*displacex/2, 0, this->width*displacey/2);
+    glRotatef(armRot, 0,1,0);
+    glTranslatef(-this->width*displacex/2, 0, -this->width*displacey/2);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 1);
+    glVertex3f(-this->width / 2, 0, -this->height*0.22 / 2);
+    glTexCoord2f(1, 1);
+    glVertex3f(0-this->width*0.15 / 2, 0, -this->height*0.2 / 2);
+    glTexCoord2f(1, 0.0);
+    glVertex3f(0-this->width*0.15/ 2, 0, this->height*0.60 / 2);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(-this->width / 2, 0, this->height*0.60 / 2);
+    glEnd();
+
+    end2DTexture();
+
+    start2DTexture(leftArm);
+
+    glTranslatef(defender.state.positionCurrent.x, GOAL_POST_Y, (this->height) / 2 - BALL_RADIUS);
+    glScalef(-1,1,1);
+    glTranslatef(this->width*displacex/2, 0, this->width*displacey/2);
+    glRotatef(armRot, 0,1,0);
+    glTranslatef(-this->width*displacex/2, 0, -this->width*displacey/2);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 1);
+    glVertex3f(-this->width / 2, 0, -this->height*0.22 / 2);
+    glTexCoord2f(1, 1);
+    glVertex3f(0-this->width*0.15 / 2, 0, -this->height*0.2 / 2);
+    glTexCoord2f(1, 0.0);
+    glVertex3f(0-this->width*0.15/ 2, 0, this->height*0.60 / 2);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(-this->width / 2, 0, this->height*0.60 / 2);
+    glEnd();
+
+    end2DTexture();
+
 //    glPopAttrib();
 //    glPopMatrix();
 }

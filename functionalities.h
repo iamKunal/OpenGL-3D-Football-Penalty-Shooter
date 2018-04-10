@@ -14,8 +14,8 @@ using namespace std;
 #define DEG2GRAD(x) ((x) * PI/180.0)
 
 #define GRAD2DEG(x) ((x) * 180.0/PI)
-
 using namespace std;
+
 extern unsigned int Tries, Goals;
 
 void handleResize(int w, int h);
@@ -60,7 +60,7 @@ void drawGoalPost();
 void cameraPosition(axes point, double distance, double xAngle, double zAngle);
 
 struct camera {
-    double xAngle, zAngle;
+    double zAngle, xAngle;
     double distance;
 
     camera();
@@ -115,11 +115,14 @@ extern bool firstTime;
 enum alignment {
     LEFT, RIGHT, CENTER
 };
-extern GLuint groundTexture, defenderTexture, font, ads;
+extern GLuint groundTexture, defenderTexture, leftArm, rightArm, font, ads;
 extern vector<float> currentTextColor;
 float writeText(string text, int texture, alignment align = LEFT);
 float writeMultiLineText(string text, int texture, alignment align = LEFT);
 void drawChalkLines();
+
+void showMsg();
+void rotateMsg(int _);
 
 extern axes toLookAt;
 #endif //FOOTBALL_PENALTY_SHOOTER_FUNCTIONALITIES_H

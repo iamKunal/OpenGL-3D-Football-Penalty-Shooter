@@ -175,8 +175,8 @@ void initialiseEverything() {
     defender.state.positionCurrent.x = 0.0;
 
 
-    sphereCamera.zAngle = -90.0f;
-    sphereCamera.xAngle = 15.0f;
+    sphereCamera.xAngle = -90.0f;
+    sphereCamera.zAngle = 15.0f;
     sphereCamera.distance = 5.0;
     sphereCamera.distance = 10;
     for (int i = 0; i < 3; ++i) {
@@ -197,6 +197,7 @@ void initialiseEverything() {
         delete determineSphere;
         determineSphere = NULL;
     }
+    system("paplay resources/whistle.wav &");
 }
 
 void initialiseEverythingCallback(int _) {
@@ -235,7 +236,7 @@ void cameraPosition(axes point, double distance, double zAngle, double xAngle) {
 }
 
 camera::camera() {
-    xAngle = zAngle = 0.0;
+    zAngle = xAngle = 0.0;
     distance = 5.0;
 }
 
@@ -355,17 +356,20 @@ Press Q at any time to exit the game.
 )INSTRUCT";
 
         glPushMatrix();
+        glRotatef(90 + sphereCamera.xAngle, 0, 0, 1);
+        glRotatef(-sphereCamera.zAngle, 1, 0, 0);
+
         glTranslatef(0, -BALL_RADIUS, -BALL_RADIUS);
 
         glColor4f(0, 0, 0, 0.8);
         glBegin(GL_QUADS);
-        glVertex3f(-10, 0, -6);
-        glVertex3f(10, 0, -6);
-        glVertex3f(10, 0, 5);
-        glVertex3f(-10, 0, 5);
+        glVertex3f(-10, 0, -5);
+        glVertex3f(10, 0, -5);
+        glVertex3f(10, 0, 6);
+        glVertex3f(-10, 0, 6);
         glEnd();
-        glScalef(0.55, 0.55, 0.55);
-        glTranslatef(0, -0.001, 8.5);
+        glScalef(0.5, 0.5, 0.5);
+        glTranslatef(0, -0.001, 9.5);
 
         currentTextColor = {1.0, 1.0, 1.0, 1.0};
         writeMultiLineText(instructions, font, CENTER);
@@ -422,6 +426,14 @@ void goalAnimateCallBack(int _) {
 
 
 void updateDefenderPosition(int _) {
+
+    static float increment=2.0f;
+
+    defender.armRot += increment;
+
+    if (defender.armRot > 100.0 || defender.armRot < 0.0 ){
+        increment*=-1;
+    }
 
     defender.state.timePassed += 1 / 60.0;
     double t = 1 / 60.0;
@@ -505,22 +517,23 @@ GLuint loadTextureFile(const char *filename) {
     return texture;
 }
 
-const float chalkwidth=POLE_RADIUS;
-void chalkHRectangle(axes start, axes end){
+const float chalkwidth = POLE_RADIUS;
+
+void chalkHRectangle(axes start, axes end) {
     glBegin(GL_QUADS);
-    glVertex3f(start.x, start.y-chalkwidth/2.0, 0);
-    glVertex3f(start.x, start.y+chalkwidth/2.0, 0);
-    glVertex3f(end.x, end.y+chalkwidth/2.0, 0);
-    glVertex3f(end.x, end.y-chalkwidth/2.0, 0);
+    glVertex3f(start.x, start.y - chalkwidth / 2.0, 0);
+    glVertex3f(start.x, start.y + chalkwidth / 2.0, 0);
+    glVertex3f(end.x, end.y + chalkwidth / 2.0, 0);
+    glVertex3f(end.x, end.y - chalkwidth / 2.0, 0);
     glEnd();
 }
 
-void chalkVRectangle(axes start, axes end){
+void chalkVRectangle(axes start, axes end) {
     glBegin(GL_QUADS);
-    glVertex3f(start.x-chalkwidth/2.0, start.y, 0);
-    glVertex3f(start.x+chalkwidth/2.0, start.y, 0);
-    glVertex3f(end.x+chalkwidth/2.0, end.y, 0);
-    glVertex3f(end.x-chalkwidth/2.0, end.y, 0);
+    glVertex3f(start.x - chalkwidth / 2.0, start.y, 0);
+    glVertex3f(start.x + chalkwidth / 2.0, start.y, 0);
+    glVertex3f(end.x + chalkwidth / 2.0, end.y, 0);
+    glVertex3f(end.x - chalkwidth / 2.0, end.y, 0);
     glEnd();
 }
 
@@ -530,23 +543,23 @@ void drawChalkLines() {
     glPushMatrix();
 
     glColor3f(0.9, 0.9, 0.9);
-    glTranslatef(0, 0, 0.0001-BALL_RADIUS);
+    glTranslatef(0, 0, 0.0001 - BALL_RADIUS);
 //    glLineWidth(POLE_RADIUS / 1.5);
-    GLUquadric * quad = gluNewQuadric();
-    gluDisk(quad, 0,chalkwidth/1.5,25,6);
+    GLUquadric *quad = gluNewQuadric();
+    gluDisk(quad, 0, chalkwidth / 1.5, 25, 6);
     gluDeleteQuadric(quad);
-    axes start={ground.corners[1].x+2,GOAL_POST_Y,0};
-    axes end={ground.corners[2].x-2,GOAL_POST_Y,0};
-    chalkHRectangle(start,end);
+    axes start = {ground.corners[1].x + 2, GOAL_POST_Y, 0};
+    axes end = {ground.corners[2].x - 2, GOAL_POST_Y, 0};
+    chalkHRectangle(start, end);
     start.y = -start.y;
     end.y = -end.y;
-    chalkHRectangle(start,end);
-    start = {ground.corners[1].x+2, GOAL_POST_Y+chalkwidth/2.0, 0};
-    end = {ground.corners[0].x+2, -GOAL_POST_Y-chalkwidth/2.0,0};
-    chalkVRectangle(start,end);
+    chalkHRectangle(start, end);
+    start = {ground.corners[1].x + 2, GOAL_POST_Y + chalkwidth / 2.0, 0};
+    end = {ground.corners[0].x + 2, -GOAL_POST_Y - chalkwidth / 2.0, 0};
+    chalkVRectangle(start, end);
     start.x = -start.x;
-    end.x = - end.x;
-    chalkVRectangle(start,end);
+    end.x = -end.x;
+    chalkVRectangle(start, end);
     glPopMatrix();
     glPopAttrib();
     glPopAttrib();
@@ -559,7 +572,7 @@ GLuint convertAndLoadTexture(const char *filename) {
     return loadTextureFile(dest.c_str());
 }
 
-GLuint groundTexture, defenderTexture, font, ads;
+GLuint groundTexture, defenderTexture, leftArm, rightArm, font, ads;
 
 void start2DTexture(GLuint texture, bool lightingDisabled) {
 
@@ -646,4 +659,91 @@ float writeText(string text, int texture, alignment align) {
 
     end2DTexture();
     return (2 * w / 128.0) / h;
+}
+
+
+int textRotX;
+
+void rotateMsg(int _) {
+    textRotX = (textRotX + 3) % 360;
+
+    if (textRotX != 0) {
+        glutTimerFunc(1, rotateMsg, 0);
+    }
+}
+
+
+void showMsg() {
+    glPushMatrix();
+
+    float col[]={132/255.0, 121/255.0, 150/255.0, 0.7};
+//    float col[] = {1,0,0,1};
+
+    float distance = sphereCamera.distance-4;
+
+    float colin[] = {1.0,1.0,1.0,0.7};
+    glTranslatef(distance * (cos(DEG2GRAD(sphereCamera.zAngle)) * cos(DEG2GRAD(sphereCamera.xAngle))), distance * (cos(DEG2GRAD(sphereCamera.zAngle)) * sin(DEG2GRAD(sphereCamera.xAngle))), distance * sin(DEG2GRAD(sphereCamera.zAngle)));
+    glTranslatef(toLookAt.x, toLookAt.y , toLookAt.z);
+    glRotatef(90 + sphereCamera.xAngle + textRotX, 0, 0, 1);
+    glRotatef(-sphereCamera.zAngle, 1, 0, 0);
+    glScalef(0.75, 0.75, 0.75);
+
+    bool toWrite = true;
+
+    string msg = "MISS!";
+
+    currentTextColor = {1.0,0.3,0.3,1};
+    if (determineSphere) {
+        if (isItGoal(*determineSphere)) {
+            msg = "GOAL!";
+            currentTextColor = {0.3,1.0,0.3,1};
+        }
+    }
+    if (!determineSphere) {
+        msg = "";
+        toWrite = false;
+    }
+    if (toWrite) {
+        GLUquadric *quad = gluNewQuadric();
+        glPushMatrix();
+        glColor4fv(col);
+        glScalef(2,0.5, 1);
+        glRotatef(90, 1, 0, 0);
+        gluCylinder(quad, 1, 1, 1, 40, 40);
+        gluDisk(quad, 0.9, 1, 40, 40);
+        glColor4fv(colin);
+        gluDisk(quad, 0 ,0.9,40,40);
+
+        glPopMatrix();
+
+        glPushMatrix();
+
+        glPushMatrix();
+        glColor4fv(col);
+        glScalef(2,0.5,1);
+        glTranslatef(0,-1,0);
+        glRotatef(90, 1, 0, 0);
+        gluDisk(quad, 0.9, 1, 40, 40);
+        glColor4fv(colin);
+        gluDisk(quad, 0 ,0.9,40,40);
+        glPopMatrix();
+        gluDeleteQuadric(quad);
+        glPopMatrix();
+
+
+        glPushMatrix();
+        glTranslatef(0,.001,-0.5);
+        glRotatef(180, 0,0,1);
+        writeText(msg, font, CENTER);
+
+        glPopMatrix();
+
+
+        glPushMatrix();
+        glTranslatef(0,-0.501,-0.5);
+        writeText(msg, font, CENTER);
+        glPopMatrix();
+
+    }
+    glPopMatrix();
 }

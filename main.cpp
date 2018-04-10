@@ -158,7 +158,7 @@ void updatePosCallBack(int _) {
 
 void draw() {
     glLoadIdentity(); //Reset the drawing perspective
-    cameraPosition(toLookAt, sphereCamera.distance, sphereCamera.xAngle, sphereCamera.zAngle);
+    cameraPosition(toLookAt, sphereCamera.distance, sphereCamera.zAngle, sphereCamera.xAngle);
     if (firstTime) {
         glutWarpPointer(WIDTH / 2, HEIGHT);
         firstTime = false;
@@ -225,8 +225,12 @@ void draw() {
     ground.draw();
     defender.draw();
     showScore();
+
+    showMsg();
+
 //    loadTextureFile("");
     drawHUD();
+
 
     glutSwapBuffers();
     glutPostRedisplay();
@@ -394,6 +398,8 @@ void idle() {
                         Goals++;
                         system("paplay resources/goal.wav&");
                     }
+
+                    rotateMsg(0);
                     glutTimerFunc(1000 * RESET_TIME, initialiseEverythingCallback, 0);
                     Tries++;
                 }
@@ -415,16 +421,16 @@ void handleSpecialKeypress(int key, int x, int y) {
 //    if (currentMode == ADJUSTING || currentMode == REPLAY) {
 //        switch (key) {
 //            case GLUT_KEY_UP:
-//                sphereCamera.xAngle += 1.0f;
+//                sphereCamera.zAngle += 1.0f;
 //                break;
 //            case GLUT_KEY_DOWN:
-//                sphereCamera.xAngle -= 1.0f;
-//                break;
-//            case GLUT_KEY_LEFT:
 //                sphereCamera.zAngle -= 1.0f;
 //                break;
+//            case GLUT_KEY_LEFT:
+//                sphereCamera.xAngle -= 1.0f;
+//                break;
 //            case GLUT_KEY_RIGHT:
-//                sphereCamera.zAngle += 1.0f;
+//                sphereCamera.xAngle += 1.0f;
 //                break;
 //        }
 //    }
@@ -477,8 +483,8 @@ int sgn(T val) {
 void handlePassiveMouse(int x, int y) {
 //    if (currentMode == ADJUSTING) {
     if (currentMode != HELP) {
-        sphereCamera.zAngle = -90 + (x - WIDTH / 2) * 90 / WIDTH;
-        sphereCamera.xAngle = 45 + -1 * (y) * 30 / HEIGHT;
+        sphereCamera.xAngle = -90 + (x - WIDTH / 2) * 90 / WIDTH;
+        sphereCamera.zAngle = 45 + -1 * (y) * 30 / HEIGHT;
     }
 }
 
@@ -526,6 +532,8 @@ int main(int argc, char *argv[]) {
     defenderTexture = convertAndLoadTexture("resources/defender.txt");
     font = convertAndLoadTexture("resources/fonts/Ubuntu Mono Nerd Font Complete Mono.txt");
     ads = convertAndLoadTexture("resources/ads.txt");
+    leftArm = convertAndLoadTexture("resources/left_arm.txt");
+    rightArm = convertAndLoadTexture("resources/right_arm.txt");
     glutMouseFunc(NULL);
     glutDisplayFunc(draw);
     myInit();
