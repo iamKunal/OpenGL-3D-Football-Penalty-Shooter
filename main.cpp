@@ -312,15 +312,6 @@ void incrementPowerMeter(int _) {
     }
 }
 
-void update(int _) {
-    float increment = 0.0;
-}
-
-void update_callback(int _) {
-    update(_);
-    glutTimerFunc(25, update_callback, 0);
-}
-
 void handleKeypress(unsigned char key, //The key that was pressed
                     int x, int y) {    //The current mouse coordinates
     if (currentMode != HELP) {
@@ -537,8 +528,6 @@ int main(int argc, char *argv[]) {
     glutMouseFunc(NULL);
     glutDisplayFunc(draw);
     myInit();
-
-    glutTimerFunc(25, update_callback, 0);
     glutMainLoop();
 
     return 0;

@@ -19,7 +19,6 @@ bool firstTime = true;
 PhysicalState sphere, *determineSphere = NULL;
 
 void handleResize(int w, int h) {
-    //Tell OpenGL how to convert from coordinates to pixel values
     glViewport(0, 0, w, h);
 
     glMatrixMode(GL_PROJECTION); //Switch to setting the camera perspective
@@ -418,46 +417,48 @@ Press Q at any time to exit the game.
     }
     glEnable(GL_LIGHTING);
 }
-
-void goalAnimateCallBack(int _) {
-
-
-}
-
-
 void updateDefenderPosition(int _) {
 
-    static float increment=2.0f;
-
+    static float increment = 2.0f;
+    static int done = 0;
     defender.armRot += increment;
 
-    if (defender.armRot > 100.0 || defender.armRot < 0.0 ){
-        increment*=-1;
+    if (defender.armRot > 100.0 || defender.armRot < 0.0) {
+        increment *= -1;
     }
 
     defender.state.timePassed += 1 / 60.0;
     double t = 1 / 60.0;
     defender.acceleration();
-    for (int i = 0; i < 3; ++i) {
-        defender.state.positionCurrent[i] =
-                defender.state.velocityCurrent[i] * t + 0.5 * defender.state.accelerationCurrent[i] * t * t +
-                defender.state.positionCurrent[i];
-        defender.state.velocityCurrent[i] =
-                defender.state.velocityCurrent[i] + defender.state.accelerationCurrent[i] * t;
-    }
+
+    if (currentMode == SHOOTING) {
+        if (!done) {
+//            cout<<sphere.velocityCurrent.x<<endl;
+            if (sphere.velocityCurrent.x < 0) {
+                defender.state.velocityCurrent.x = -DEFENDER_SPEED;
+                done = 1;
+            } else if (sphere.velocityCurrent.x > 0) {
+                defender.state.velocityCurrent.x = DEFENDER_SPEED;
+                done = 1;
+            } else {
+                defender.state.velocityCurrent.x = 0;
+                done = 1;
+            }
+        }
+        for (int i = 0; i < 3; ++i) {
+            defender.state.positionCurrent[i] =
+                    defender.state.velocityCurrent[i] * t + 0.5 * defender.state.accelerationCurrent[i] * t * t +
+                    defender.state.positionCurrent[i];
+            defender.state.velocityCurrent[i] =
+                    defender.state.velocityCurrent[i] + defender.state.accelerationCurrent[i] * t;
+        }
 //    if (currentMode != NONE && currentMode != GOAL_ANIMATION){
-    glutTimerFunc(1000 * 1 / 60.0, updateDefenderPosition, 1 / 60.0);
 //    }
-}
-
-
-void drawBitmapText(const char *string, float x, float y) {
-    const char *c;
-    glRasterPos2f(x, y);
-
-    for (c = string; *c != '\0'; c++) {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
     }
+    else{
+        done=0;
+    };
+    glutTimerFunc(1000 * 1 / 60.0, updateDefenderPosition, 1 / 60.0);
 }
 
 
@@ -676,14 +677,16 @@ void rotateMsg(int _) {
 void showMsg() {
     glPushMatrix();
 
-    float col[]={132/255.0, 121/255.0, 150/255.0, 0.7};
+    float col[] = {132 / 255.0, 121 / 255.0, 150 / 255.0, 0.7};
 //    float col[] = {1,0,0,1};
 
-    float distance = sphereCamera.distance-4;
+    float distance = sphereCamera.distance - 4;
 
-    float colin[] = {1.0,1.0,1.0,0.7};
-    glTranslatef(distance * (cos(DEG2GRAD(sphereCamera.zAngle)) * cos(DEG2GRAD(sphereCamera.xAngle))), distance * (cos(DEG2GRAD(sphereCamera.zAngle)) * sin(DEG2GRAD(sphereCamera.xAngle))), distance * sin(DEG2GRAD(sphereCamera.zAngle)));
-    glTranslatef(toLookAt.x, toLookAt.y , toLookAt.z);
+    float colin[] = {1.0, 1.0, 1.0, 0.7};
+    glTranslatef(distance * (cos(DEG2GRAD(sphereCamera.zAngle)) * cos(DEG2GRAD(sphereCamera.xAngle))),
+                 distance * (cos(DEG2GRAD(sphereCamera.zAngle)) * sin(DEG2GRAD(sphereCamera.xAngle))),
+                 distance * sin(DEG2GRAD(sphereCamera.zAngle)));
+    glTranslatef(toLookAt.x, toLookAt.y, toLookAt.z);
     glRotatef(90 + sphereCamera.xAngle + textRotX, 0, 0, 1);
     glRotatef(-sphereCamera.zAngle, 1, 0, 0);
     glScalef(0.75, 0.75, 0.75);
@@ -692,11 +695,11 @@ void showMsg() {
 
     string msg = "MISS!";
 
-    currentTextColor = {1.0,0.3,0.3,1};
+    currentTextColor = {1.0, 0.3, 0.3, 1};
     if (determineSphere) {
         if (isItGoal(*determineSphere)) {
             msg = "GOAL!";
-            currentTextColor = {0.3,1.0,0.3,1};
+            currentTextColor = {0.3, 1.0, 0.3, 1};
         }
     }
     if (!determineSphere) {
@@ -707,12 +710,12 @@ void showMsg() {
         GLUquadric *quad = gluNewQuadric();
         glPushMatrix();
         glColor4fv(col);
-        glScalef(2,0.5, 1);
+        glScalef(2, 0.5, 1);
         glRotatef(90, 1, 0, 0);
         gluCylinder(quad, 1, 1, 1, 40, 40);
         gluDisk(quad, 0.9, 1, 40, 40);
         glColor4fv(colin);
-        gluDisk(quad, 0 ,0.9,40,40);
+        gluDisk(quad, 0, 0.9, 40, 40);
 
         glPopMatrix();
 
@@ -720,27 +723,27 @@ void showMsg() {
 
         glPushMatrix();
         glColor4fv(col);
-        glScalef(2,0.5,1);
-        glTranslatef(0,-1,0);
+        glScalef(2, 0.5, 1);
+        glTranslatef(0, -1, 0);
         glRotatef(90, 1, 0, 0);
         gluDisk(quad, 0.9, 1, 40, 40);
         glColor4fv(colin);
-        gluDisk(quad, 0 ,0.9,40,40);
+        gluDisk(quad, 0, 0.9, 40, 40);
         glPopMatrix();
         gluDeleteQuadric(quad);
         glPopMatrix();
 
 
         glPushMatrix();
-        glTranslatef(0,.001,-0.5);
-        glRotatef(180, 0,0,1);
+        glTranslatef(0, .001, -0.5);
+        glRotatef(180, 0, 0, 1);
         writeText(msg, font, CENTER);
 
         glPopMatrix();
 
 
         glPushMatrix();
-        glTranslatef(0,-0.501,-0.5);
+        glTranslatef(0, -0.501, -0.5);
         writeText(msg, font, CENTER);
         glPopMatrix();
 

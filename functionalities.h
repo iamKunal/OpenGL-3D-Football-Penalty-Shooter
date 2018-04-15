@@ -9,7 +9,6 @@
 #include <bits/stdc++.h>
 #include <GL/glut.h>
 #include "constants.h"
-#include "SOIL.h"
 using namespace std;
 #define DEG2GRAD(x) ((x) * PI/180.0)
 
@@ -77,7 +76,6 @@ enum mode {
     ADJUSTING, AIMING, POWERING, SHOOTING, HELP, NONE
 };
 
-void goalAnimateCallBack(int _=0);
 void backgroundMusicPlayer(int);
 
 
